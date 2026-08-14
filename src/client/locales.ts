@@ -27,6 +27,7 @@ export const zh = {
   overridden: '已覆盖',
   default: '默认',
   save: '保存',
+  discard: '放弃',
 }
 
 export const en: Record<keyof typeof zh, string> = {
@@ -44,4 +45,5 @@ export const en: Record<keyof typeof zh, string> = {
   overridden: 'Overridden',
   default: 'Default',
   save: 'Save',
+  discard: 'Discard',
 }

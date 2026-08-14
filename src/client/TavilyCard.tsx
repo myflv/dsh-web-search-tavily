@@ -17,16 +17,64 @@ export type TavilyCardProps =
   PropsRuntime<'settings.plugin.item'>
   & InjectFace<TavilyCardFace>
 
-/** Render the Tavily settings section. */
+/** Card shell chrome (mirrors the official PluginCard look). */
+const cardStyle: React.CSSProperties = {
+  border: '1px solid rgba(128, 128, 128, 0.25)',
+  borderRadius: 12,
+  padding: '16px 20px',
+  background: 'var(--bg, transparent)',
+  marginBottom: 16,
+}
+
+const titleStyle: React.CSSProperties = {
+  fontSize: 15,
+  fontWeight: 600,
+  margin: '0 0 4px',
+}
+
+const descStyle: React.CSSProperties = {
+  fontSize: 13,
+  opacity: 0.6,
+  margin: '0 0 12px',
+}
+
+const actionsStyle: React.CSSProperties = {
+  display: 'flex',
+  gap: 8,
+  marginTop: 12,
+}
+
+const saveStyle: React.CSSProperties = {
+  height: 32,
+  padding: '0 20px',
+  borderRadius: 100,
+  border: 'none',
+  background: 'var(--text-1, #111)',
+  color: 'var(--bg, #fff)',
+  fontSize: 13,
+  fontWeight: 500,
+  fontFamily: 'inherit',
+  cursor: 'pointer',
+}
+
+const discardStyle: React.CSSProperties = {
+  ...saveStyle,
+  background: 'transparent',
+  color: 'var(--text-1, inherit)',
+  border: '1px solid rgba(128, 128, 128, 0.4)',
+}
+
+/** Render the Tavily card in the plugins tab. */
 export function TavilyCard(props: TavilyCardProps) {
   const { tavilyCard } = props
   const state = useSyncExternalStore(tavilyCard.subscribe, tavilyCard.getState)
   const [draft, setDraft] = React.useState<{ baseURL?: string; maxResults?: string; apiKey?: string }>({})
   const disabled = !state.writable
+  const hasEdits = Object.keys(draft).length > 0
   return (
-    <section>
-      <h3>{zh.webSearchTitle}</h3>
-      <p>{zh.webSearchDescription}</p>
+    <section style={cardStyle}>
+      <h3 style={titleStyle}>{zh.webSearchTitle}</h3>
+      <p style={descStyle}>{zh.webSearchDescription}</p>
       <SecretField
         id="tavily-section-api-key"
         label={zh.webSearchApiKey}
@@ -55,15 +103,23 @@ export function TavilyCard(props: TavilyCardProps) {
         text={draft.maxResults ?? state.maxResults}
         onEdit={(text) => { setDraft((d) => ({ ...d, maxResults: text })) }}
       />
-      <button
-        disabled={disabled}
-        onClick={() => {
-          void tavilyCard.save(draft)
-          setDraft({})
-        }}
-      >
-        {zh.save}
-      </button>
+      <div style={actionsStyle}>
+        <button
+          style={saveStyle}
+          disabled={disabled || !hasEdits}
+          onClick={() => {
+            void tavilyCard.save(draft)
+            setDraft({})
+          }}
+        >
+          {zh.save}
+        </button>
+        {hasEdits ? (
+          <button style={discardStyle} onClick={() => { setDraft({}) }}>
+            {zh.discard}
+          </button>
+        ) : null}
+      </div>
     </section>
   )
 }
