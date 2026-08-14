@@ -12,6 +12,17 @@ npm run build    # tsc → lib/（ESM + 类型声明）
 npm pack         # 或直接打包，得到 dsh-web-search-tavily-0.1.0.tgz
 ```
 
+## 构建与发版
+
+CI（`.github/workflows/release.yml`）负责构建：打 tag 即出 GitHub Release（tarball 自动构建，asset 名固定为 `dsh-web-search-tavily.tgz`）：
+
+```bash
+# 本机只做两件事：改版本号 + 打 tag
+git tag v0.1.0 && git push origin v0.1.0
+```
+
+（不想走 CI 时本机构建：`npm install && npm pack`）
+
 ## 安装
 
 ### 用户侧（推荐，不动共享镜像）
@@ -19,16 +30,11 @@ npm pack         # 或直接打包，得到 dsh-web-search-tavily-0.1.0.tgz
 插件是个人私货、镜像由团队共享时用这条。dsh 的 profile 机制原生支持 out-of-tree 插件：Loader 的 `baseUrl` 就是 profile 目录，插件包放进 profile 的 `node_modules` 即被解析；peer 依赖（cordis 等）从 `~/profiles/node_modules` 的 fallback symlink 解析，与安装树共享单实例。
 
 ```bash
-# 本机产出 tarball
-npm install && npm pack
-
-# tarball 弄到 NAS（scp / docker cp / 容器内 npm pack 均可）
-
-# 容器内（工作区卷，容器重建不丢）
+# 容器内（工作区卷，容器重建不丢；tarball 直接从 GitHub Release 拉，零构建）
 PROFILE=$(ls /root/profiles | head -1)   # profile 目录名
 mkdir -p /root/profiles/$PROFILE/node_modules/dsh-web-search-tavily
-tar xzf dsh-web-search-tavily-0.1.0.tgz \
-    -C /root/profiles/$PROFILE/node_modules/dsh-web-search-tavily --strip-components=1
+curl -sL https://github.com/myflv/dsh-web-search-tavily/releases/latest/download/dsh-web-search-tavily.tgz \
+    | tar xz -C /root/profiles/$PROFILE/node_modules/dsh-web-search-tavily --strip-components=1
 ```
 
 > 别用 `npm install --prefix ...` 装——npm 11 的 `auto-install-peers` 已失效，会把 cordis 等 peer 重复装进 profile，双实例风险。手动解压与官方 `autoInstallPeers: false` 布局等价。
