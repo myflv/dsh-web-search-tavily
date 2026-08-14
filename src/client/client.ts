@@ -1,10 +1,5 @@
-/**
- * Browser half: registers the Tavily card into the settings shell as an
- * independent section (settings.section — the shell's own declaration, stable
- * across plugin sets; the plugins-tab card slot is nested deeper and harder
- * to reach). The card edits the `web-search-tavily` settings section and the
- * `TAVILY_API_KEY` credential.
- */
+// 浏览器半：注册 settings.section（shell 自己的声明，跨插件集稳定）；卡片编辑
+// web-search-tavily 配置域与 TAVILY_API_KEY 凭据。
 
 import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
 import type { ConnectionHandle } from '@deepseek-ai/dsh-client-connection/client'

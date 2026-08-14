@@ -1,9 +1,4 @@
-/**
- * The Tavily card's staged form over the `web-search-tavily` settings section:
- * baseURL/maxResults route through the settings scope, the apiKey through the
- * credentials domain under the reference the section names (default
- * `TAVILY_API_KEY`). Mirrors the official DeepSeek web-search card.
- */
+// Tavily 设置控制器：key 经凭据域读写（默认引用 TAVILY_API_KEY），对齐官方 DeepSeek 卡片。
 
 import type { IApiClient } from '@deepseek-ai/dsh-api-remotes/client'
 import type { SettingsScope } from '@deepseek-ai/dsh-client-runtime/client'
@@ -20,18 +15,10 @@ export interface TavilySettings {
 
 /** What the Tavily card renders. */
 export interface TavilyCardState {
-  /** Provider endpoint. */
-  baseURL: string
-  /** Default result count (empty = unset). */
-  maxResults: string
-  /** The staged credential, blank on every load. */
-  apiKey: string
   /** Whether the Host reports a credential configured for the referenced key. */
   apiKeyConfigured: boolean
   /** Whether the credentials domain accepts a write; false disables the control. */
   apiKeyWritable: boolean
-  /** Whether the settings section is writable. */
-  writable: boolean
 }
 
 /** The registration-side face the card's slot entry injects. */
@@ -40,7 +27,7 @@ export interface TavilyCardFace {
   tavilyCard: {
     subscribe(listener: () => void): () => void
     getState(): TavilyCardState
-    save(edits: { baseURL?: string; maxResults?: string; apiKey?: string }): Promise<void>
+    save(apiKey: string): Promise<void>
     unsetKey(): Promise<void>
   }
 }
@@ -56,9 +43,10 @@ export class TavilyCardController {
     private readonly api: Pick<IApiClient, 'credentials'>,
   ) {
     this.state = this.project()
+    // settings 变更不可能改凭据（只经本卡 set/unset），仅在 apiKeyEnv 引用变化时重读
     scope.subscribe(() => {
       this.state = this.project()
-      void this.readCredential()
+      if (refOf(this.scope.getSnapshot()) !== this.credential.ref) void this.readCredential()
       this.emit()
     })
     void this.readCredential()
@@ -75,23 +63,15 @@ export class TavilyCardController {
     return this.state
   }
 
-  /**
-   * Commit staged edits: value fields through the settings scope, the key
-   * through the credentials domain; then re-read the credential state.
-   */
-  save = async (edits: { baseURL?: string; maxResults?: string; apiKey?: string }): Promise<void> => {
-    if (edits.baseURL !== undefined) await this.scope.set('baseURL', edits.baseURL)
-    if (edits.maxResults !== undefined) {
-      const n = edits.maxResults.trim()
-      await this.scope.set('maxResults', n === '' ? null : Number(n))
-    }
-    if (edits.apiKey !== undefined && edits.apiKey.trim() !== '') {
-      try {
-        await this.api.credentials.set({ ref: refOf(this.scope.getSnapshot()), value: edits.apiKey.trim() })
-      } catch {
-        // Refusals surface through the re-read below: the Host is the only
-        // authority on whether the key now exists.
-      }
+  /** 写 key 到凭据域（空值忽略），随后重读凭据状态。 */
+  save = async (apiKey: string): Promise<void> => {
+    const value = apiKey.trim()
+    if (value === '') return
+    try {
+      await this.api.credentials.set({ ref: refOf(this.scope.getSnapshot()), value })
+    } catch {
+      // Refusals surface through the re-read below: the Host is the only
+      // authority on whether the key now exists.
     }
     await this.readCredential()
     this.emit()
@@ -109,14 +89,9 @@ export class TavilyCardController {
   }
 
   private project(): TavilyCardState {
-    const section = this.scope.getSnapshot().value ?? {}
     return {
-      baseURL: section.baseURL ?? '',
-      maxResults: section.maxResults === undefined ? '' : String(section.maxResults),
-      apiKey: '',
       apiKeyConfigured: this.credential.configured,
       apiKeyWritable: this.credential.writable,
-      writable: this.scope.getSnapshot().writable !== false,
     }
   }
 

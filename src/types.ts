@@ -9,7 +9,6 @@ export interface TavilyResult {
   readonly url: string
   /** Retrieved page content / snippet. */
   readonly content: string
-  readonly score: number
   /** ISO-8601 publish date, absent for undated pages. */
   readonly published_date?: string
 }

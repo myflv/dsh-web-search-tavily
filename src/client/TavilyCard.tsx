@@ -1,9 +1,4 @@
-/**
- * The Tavily provider row in its settings section: provider name + key-state
- * dot + edit/delete actions, matching the shell's own provider rows (the
- * Models section). Editing expands an inline key field; the key is written
- * through the credentials domain.
- */
+// Tavily provider 行（对齐模型 section）：行名 + 密钥圆点 + 编辑/删除；编辑展开 key 输入。
 
 const React = require('react') as typeof import('react')
 const { useSyncExternalStore } = require('react') as typeof import('react')
@@ -116,8 +111,8 @@ export function TavilyCard(props: TavilyCardProps) {
               <span
                 style={dotStyle(state.apiKeyConfigured)}
                 role="img"
-                aria-label={state.apiKeyConfigured ? zh.keyConfigured : zh.keyMissing}
-                title={state.apiKeyConfigured ? zh.keyConfigured : zh.keyMissing}
+                aria-label={state.apiKeyConfigured ? zh.webSearchApiKeySet : zh.webSearchApiKeyUnset}
+                title={state.apiKeyConfigured ? zh.webSearchApiKeySet : zh.webSearchApiKeyUnset}
               />
             </span>
             <span style={rowActionsStyle}>
@@ -127,7 +122,7 @@ export function TavilyCard(props: TavilyCardProps) {
                     style={primaryStyle}
                     disabled={keyDraft.trim() === ''}
                     onClick={() => {
-                      void tavilyCard.save({ apiKey: keyDraft })
+                      void tavilyCard.save(keyDraft)
                       setEditing(false)
                       setKeyDraft('')
                     }}
@@ -143,7 +138,7 @@ export function TavilyCard(props: TavilyCardProps) {
                   <button
                     style={secondaryStyle}
                     disabled={!state.apiKeyWritable}
-                    onClick={() => { setKeyDraft(''); setEditing(true) }}
+                    onClick={() => { setEditing(true) }}
                   >
                     {zh.edit}
                   </button>

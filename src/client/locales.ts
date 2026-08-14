@@ -1,10 +1,10 @@
-/** Localized copy for the Tavily card (registered under the plugin's own NS). */
+/** Tavily 设置区块文案（zh/en，nav 复用 webSearchTitle）。 */
 
 import type {} from '@deepseek-ai/dsh-client-ui-slots'
 
 declare module '@deepseek-ai/dsh-client-ui-slots' {
   interface LocaleNamespaceMap {
-    /** The Tavily card's copy. */
+    /** The Tavily section's copy. */
     'web-search-tavily': TavilyCopyKey
   }
 }
@@ -14,48 +14,30 @@ export const NS = 'web-search-tavily'
 
 export const zh = {
   nav: 'Tavily 搜索',
-  providerName: 'Tavily',
-  edit: '编辑',
-  delete: '删除',
-  cancel: '取消',
-  keyConfigured: 'API 密钥已配置',
-  keyMissing: 'API 密钥缺失',
   webSearchTitle: 'Tavily 搜索',
-  webSearchDescription: '配置 Tavily 搜索 provider（取代 DeepSeek 官方搜索）',
+  webSearchDescription: '填入 Tavily API 密钥即可使用 Tavily 搜索（取代 DeepSeek 官方搜索）',
   webSearchApiKey: 'API Key',
   webSearchApiKeyHint: 'tavily.com 注册的 key；经凭据域写入，不进设置文档',
   webSearchApiKeySet: '已配置',
   webSearchApiKeyUnset: '未配置',
-  webSearchBaseUrl: '接口地址',
-  webSearchBaseUrlHint: '默认 https://api.tavily.com',
-  webSearchMaxResults: '默认结果数',
-  webSearchMaxResultsHint: '留空不限制（请求级优先）',
-  overridden: '已覆盖',
-  default: '默认',
+  providerName: 'Tavily',
+  edit: '编辑',
+  delete: '删除',
+  cancel: '取消',
   save: '保存',
-  discard: '放弃',
 }
 
 export const en: Record<keyof typeof zh, string> = {
   nav: 'Tavily Search',
-  providerName: 'Tavily',
-  edit: 'Edit',
-  delete: 'Delete',
-  cancel: 'Cancel',
-  keyConfigured: 'API key configured',
-  keyMissing: 'API key missing',
   webSearchTitle: 'Tavily Search',
-  webSearchDescription: 'Configure the Tavily search provider (replaces DeepSeek search)',
+  webSearchDescription: 'Enter your Tavily API key to enable Tavily search (replaces DeepSeek search)',
   webSearchApiKey: 'API Key',
   webSearchApiKeyHint: 'Key from tavily.com; written through the credentials domain',
   webSearchApiKeySet: 'Configured',
   webSearchApiKeyUnset: 'Not configured',
-  webSearchBaseUrl: 'Base URL',
-  webSearchBaseUrlHint: 'Default https://api.tavily.com',
-  webSearchMaxResults: 'Default result count',
-  webSearchMaxResultsHint: 'Empty = no limit (per-request wins)',
-  overridden: 'Overridden',
-  default: 'Default',
+  providerName: 'Tavily',
+  edit: 'Edit',
+  delete: 'Delete',
+  cancel: 'Cancel',
   save: 'Save',
-  discard: 'Discard',
 }

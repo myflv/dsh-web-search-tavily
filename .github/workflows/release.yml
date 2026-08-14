@@ -19,10 +19,14 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run build
       # 固定 asset 名（不带版本），安装端 URL 永远 latest/download/dsh-web-search-tavily.tgz
-      - run: npm pack && mv dsh-web-search-tavily-*.tgz dsh-web-search-tavily.tgz
+      - run: npm run pack && mv dsh-web-search-tavily-*.tgz dsh-web-search-tavily.tgz
       - name: 发布到 GitHub Release
-        run: gh release create "$GITHUB_REF_NAME" dsh-web-search-tavily.tgz --generate-notes
+        # force-push tag 会重复触发：release 已存在时删除重建，保证 tarball 最新
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release delete "$GITHUB_REF_NAME" --yes --cleanup-tag
+          fi
+          gh release create "$GITHUB_REF_NAME" dsh-web-search-tavily.tgz --generate-notes
         env:
           GH_TOKEN: ${{ github.token }}

@@ -1,10 +1,5 @@
-/**
- * `dsh-web-search-tavily`: registers a Tavily-backed `WebSearchProvider` with
- * `ctx.web`. Settings-section backed: the section (`web-search-tavily`
- * namespace) overrides the composition entry per search; the apiKey resolves
- * from the credential reference (`TAVILY_API_KEY` by default) via the launch
- * environment, so the settings UI writes keys through the credentials domain.
- */
+// 插件主体：注册 Tavily provider 进 ctx.web；settings 域（web-search-tavily 命名空间）
+// 每搜索覆盖组合配置，key 经 credentials 服务解析（UI 写入的凭据域）。
 
 import type { Context } from '@deepseek-ai/cordis'
 import { launchEnvironmentOf } from '@deepseek-ai/dsh-launch-environment'

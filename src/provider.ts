@@ -1,10 +1,5 @@
-/**
- * `TavilySearchProvider`: a `WebSearchProvider` backed by the Tavily search API
- * (`POST /search`). Maps `results[].content` to `snippet` (entries without a
- * non-blank content are dropped), `published_date` to `publishedAt`, and the
- * generated `answer` to `content`. Options resolve per search (settings-section
- * projection), mirroring `@deepseek-ai/dsh-web-search-deepseek`.
- */
+// Tavily provider：POST /search；content→snippet、answer→content、空白条目丢弃；
+// options 每搜索投影（settings 域），key 走 credentials 服务（照官方 deepseek）。
 
 import { WebError } from '@deepseek-ai/dsh-web'
 import type {
@@ -77,9 +72,9 @@ export class TavilySearchProvider implements WebSearchProvider {
   constructor(private readonly options: () => TavilySearchProviderOptions) {}
 
   available(): boolean {
+    // resolveApiKey 是必选能力（apply 恒提供），key 解析能力恒在
     const o = this.options()
-    return ((o.apiKey?.length ?? 0) > 0 || o.resolveApiKey !== undefined)
-      && URL.canParse(o.baseURL)
+    return URL.canParse(o.baseURL)
       && (o.maxResults === undefined || (Number.isInteger(o.maxResults) && o.maxResults > 0))
   }
 
@@ -113,8 +108,7 @@ export class TavilySearchProvider implements WebSearchProvider {
         ...signal !== undefined ? { signal } : {},
       })
     } catch (error: unknown) {
-      if (isAbortError(error)) throw new WebError('Tavily search aborted', 'WEB_ABORTED', { cause: error })
-      throw new WebError(`Tavily search request failed: ${String(error)}`, 'WEB_PROVIDER_ERROR', { cause: error })
+      abortWebError(error)
     }
 
     if (!response.ok) {
@@ -125,10 +119,7 @@ export class TavilySearchProvider implements WebSearchProvider {
         const detail = parsed.error ?? parsed.message
         if (detail !== undefined && detail.length > 0) message = detail
       } catch (error: unknown) {
-        // An abort fired mid-body must surface as WEB_ABORTED, not be swallowed
-        // into a generic HTTP-error message — cancellation is not a provider error.
-        if (isAbortError(error)) throw new WebError('Tavily search aborted', 'WEB_ABORTED', { cause: error })
-        // Otherwise the HTTP status is already captured in `message` above.
+        abortWebError(error) // 中止要按 WEB_ABORTED 上报，不能被吞成 HTTP 错误
       }
       throw new WebError(message, 'WEB_PROVIDER_ERROR')
     }
@@ -137,13 +128,15 @@ export class TavilySearchProvider implements WebSearchProvider {
       const payload = await response.json() as TavilySearchResponse
       return mapTavilyResponse(payload)
     } catch (error: unknown) {
-      if (isAbortError(error)) throw new WebError('Tavily search aborted', 'WEB_ABORTED', { cause: error })
-      throw new WebError(`Tavily returned an unprocessable response body: ${String(error)}`, 'WEB_PROVIDER_ERROR', { cause: error })
+      abortWebError(error)
     }
   }
 }
 
-/** True for a fetch/`AbortSignal` abort, surfaced as `WEB_ABORTED`. */
-function isAbortError(error: unknown): boolean {
-  return error instanceof DOMException && error.name === 'AbortError'
+/** 中止信号统一抛 WEB_ABORTED（fetch 或响应体解析阶段）。 */
+function abortWebError(error: unknown): never {
+  if (error instanceof DOMException && error.name === 'AbortError') {
+    throw new WebError('Tavily search aborted', 'WEB_ABORTED', { cause: error })
+  }
+  throw new WebError(`Tavily search request failed: ${String(error)}`, 'WEB_PROVIDER_ERROR', { cause: error })
 }
