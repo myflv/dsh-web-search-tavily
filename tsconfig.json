@@ -2,6 +2,7 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",
+    "jsx": "react",
     "moduleResolution": "bundler",
     "lib": ["ES2022", "DOM"],
     "outDir": "lib",
