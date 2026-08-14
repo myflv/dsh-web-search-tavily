@@ -13,6 +13,7 @@ export type TavilyCopyKey = keyof typeof zh
 export const NS = 'web-search-tavily'
 
 export const zh = {
+  nav: 'Tavily 搜索',
   webSearchTitle: 'Tavily 搜索',
   webSearchDescription: '配置 Tavily 搜索 provider（取代 DeepSeek 官方搜索）',
   webSearchApiKey: 'API Key',
@@ -29,6 +30,7 @@ export const zh = {
 }
 
 export const en: Record<keyof typeof zh, string> = {
+  nav: 'Tavily Search',
   webSearchTitle: 'Tavily Search',
   webSearchDescription: 'Configure the Tavily search provider (replaces DeepSeek search)',
   webSearchApiKey: 'API Key',
