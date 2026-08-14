@@ -8,6 +8,7 @@
 
 import type { Context } from '@deepseek-ai/cordis'
 import { launchEnvironmentOf } from '@deepseek-ai/dsh-launch-environment'
+import { credentialRef } from '@deepseek-ai/dsh-credentials'
 import { installSettingsSection, settingsNamespace } from '@deepseek-ai/dsh-settings'
 import z from '@deepseek-ai/schemastery'
 import type {} from '@deepseek-ai/dsh-web'
@@ -75,10 +76,19 @@ export function apply(ctx: Context, config: Config): void {
  * launch environment; a literal `apiKey` wins over it.
  */
 function resolveOptions(ctx: Context, config: Config): TavilySearchProviderOptions {
-  const ref = config.apiKeyEnv ?? TAVILY_DEFAULT_API_KEY_REF
-  const envKey = launchEnvironmentOf(ctx).get(ref)?.value ?? ''
+  const apiKeyEnv = credentialRef(config.apiKeyEnv ?? TAVILY_DEFAULT_API_KEY_REF)
+  const literalApiKey = config.apiKey !== undefined && config.apiKey.length > 0
+    ? config.apiKey
+    : undefined
   return {
-    apiKey: config.apiKey ?? envKey,
+    ...literalApiKey === undefined ? {} : { apiKey: literalApiKey },
+    resolveApiKey: async () => {
+      const credentials = ctx.get('credentials')
+      if (credentials !== undefined) return (await credentials.resolve(apiKeyEnv))?.value
+      // Without the seam the environment is the whole credential plane.
+      const ambient = launchEnvironmentOf(ctx).get(apiKeyEnv)
+      return ambient !== undefined && ambient.value.length > 0 ? ambient.value : undefined
+    },
     baseURL: config.baseURL ?? TAVILY_DEFAULT_BASE_URL,
     ...config.maxResults !== undefined ? { maxResults: config.maxResults } : {},
   }

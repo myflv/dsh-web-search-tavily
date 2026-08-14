@@ -25,12 +25,14 @@ export const TAVILY_DEFAULT_BASE_URL = 'https://api.tavily.com'
 export const TAVILY_DEFAULT_API_KEY_REF = 'TAVILY_API_KEY'
 
 /** Attribution header sent on every request. Bump with the package version. */
-const USER_AGENT = 'dsh-web-search-tavily/0.1.1'
+const USER_AGENT = 'dsh-web-search-tavily/0.1.4'
 
 /** Resolved provider options (the plugin's `apply` projects them per search). */
 export interface TavilySearchProviderOptions {
-  /** Tavily API key. Empty/absent makes the provider unavailable. */
-  apiKey: string
+  /** Literal Tavily API key (composition config); wins over resolution. */
+  apiKey?: string
+  /** Async key resolution through the credentials seam or the environment. */
+  resolveApiKey: () => Promise<string | undefined>
   /** Endpoint base; `/search` is appended. */
   baseURL: string
   /** Default result count when a request carries no `maxResults`. */
@@ -76,13 +78,20 @@ export class TavilySearchProvider implements WebSearchProvider {
 
   available(): boolean {
     const o = this.options()
-    return o.apiKey.length > 0
+    return ((o.apiKey?.length ?? 0) > 0 || o.resolveApiKey !== undefined)
       && URL.canParse(o.baseURL)
       && (o.maxResults === undefined || (Number.isInteger(o.maxResults) && o.maxResults > 0))
   }
 
   async search(request: WebSearchRequest, signal?: AbortSignal): Promise<WebSearchResult> {
+    // One snapshot for the whole operation: credential resolution awaits, and a
+    // settings write landing inside that await must not send the key resolved
+    // from the old section to the endpoint named by the new one.
     const o = this.options()
+    const apiKey = o.apiKey ?? await o.resolveApiKey()
+    if (apiKey === undefined || apiKey.length === 0) {
+      throw new WebError('Tavily search requires an API key (configure it in Settings → Tavily 搜索)', 'WEB_PROVIDER_ERROR')
+    }
     // A per-request bound wins over the configured default; either may be absent.
     const maxResults = request.maxResults ?? o.maxResults
     let response: Response
@@ -91,7 +100,7 @@ export class TavilySearchProvider implements WebSearchProvider {
         method: 'POST',
         redirect: 'error',
         headers: {
-          'authorization': `Bearer ${o.apiKey}`,
+          'authorization': `Bearer ${apiKey}`,
           'content-type': 'application/json',
           'accept': 'application/json',
           'user-agent': USER_AGENT,
