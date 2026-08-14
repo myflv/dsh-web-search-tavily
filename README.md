@@ -27,17 +27,20 @@ git tag v0.1.0 && git push origin v0.1.0
 
 ### 用户侧（推荐，不动共享镜像）
 
-插件是个人私货、镜像由团队共享时用这条。dsh 的 profile 机制原生支持 out-of-tree 插件：Loader 的 `baseUrl` 就是 profile 目录，插件包放进 profile 的 `node_modules` 即被解析；peer 依赖（cordis 等）从 `~/profiles/node_modules` 的 fallback symlink 解析，与安装树共享单实例。
+插件是个人私货、镜像由团队共享时用这条。dsh 原生支持 profile 插件管理（`dsh plugin` 转发 pnpm 在 profile 目录执行，`autoInstallPeers: false` 保证 peer 走安装树单实例），tarball 直接拉 GitHub Release：
 
 ```bash
-# 容器内（工作区卷，容器重建不丢；tarball 直接从 GitHub Release 拉，零构建）
-PROFILE=$(ls /root/profiles | head -1)   # profile 目录名
-mkdir -p /root/profiles/$PROFILE/node_modules/dsh-web-search-tavily
-curl -sL https://github.com/myflv/dsh-web-search-tavily/releases/latest/download/dsh-web-search-tavily.tgz \
-    | tar xz -C /root/profiles/$PROFILE/node_modules/dsh-web-search-tavily --strip-components=1
+# 容器内一次（工作区卷持久，容器重建后重跑 pnpm 安装行即可）
+npm i -g pnpm
+
+# 安装：下载 Release tarball + 官方命令 add（profile 目录名用 ls 确认）
+PROFILE=$(ls /root/profiles | head -1)
+curl -sL -o /tmp/dsh-web-search-tavily.tgz \
+    https://github.com/myflv/dsh-web-search-tavily/releases/latest/download/dsh-web-search-tavily.tgz
+dsh plugin --profile "$PROFILE" add /tmp/dsh-web-search-tavily.tgz
 ```
 
-> 别用 `npm install --prefix ...` 装——npm 11 的 `auto-install-peers` 已失效，会把 cordis 等 peer 重复装进 profile，双实例风险。手动解压与官方 `autoInstallPeers: false` 布局等价。
+> 别用 `npm install --prefix ...` 装——npm 11 的 `auto-install-peers` 已失效，会把 cordis 等 peer 重复装进 profile，双实例风险。
 
 ### 镜像级（可选，你能改 Dockerfile 时）
 
