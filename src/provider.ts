@@ -1,9 +1,9 @@
 /**
  * `TavilySearchProvider`: a `WebSearchProvider` backed by the Tavily search API
  * (`POST /search`). Maps `results[].content` to `snippet` (entries without a
- * non-blank content are dropped — the seam has no other field to derive one
- * from), `published_date` to `publishedAt`, and the generated `answer` to
- * `content`. Skeleton mirrors `@deepseek-ai/dsh-web-search-exa`.
+ * non-blank content are dropped), `published_date` to `publishedAt`, and the
+ * generated `answer` to `content`. Options resolve per search (settings-section
+ * projection), mirroring `@deepseek-ai/dsh-web-search-deepseek`.
  */
 
 import { WebError } from '@deepseek-ai/dsh-web'
@@ -15,16 +15,19 @@ import type {
 } from '@deepseek-ai/dsh-web'
 import type { TavilyError, TavilyResult, TavilySearchResponse } from './types.js'
 
-/** Stable id this provider registers under; point `ctx.web`'s searchProviderId at it. */
+/** Stable id this provider registers under; the web section's `searchProvider` points at it. */
 export const TAVILY_PROVIDER_ID = 'tavily'
 
 /** Default Tavily endpoint; `/search` is the operation. */
 export const TAVILY_DEFAULT_BASE_URL = 'https://api.tavily.com'
 
-/** Attribution header sent on every request. Bump with the package version. */
-const USER_AGENT = 'dsh-web-search-tavily/0.1.0'
+/** Credential reference resolved when the settings section names none. */
+export const TAVILY_DEFAULT_API_KEY_REF = 'TAVILY_API_KEY'
 
-/** Resolved provider options (the plugin's `apply` supplies env-var and constant defaults). */
+/** Attribution header sent on every request. Bump with the package version. */
+const USER_AGENT = 'dsh-web-search-tavily/0.1.1'
+
+/** Resolved provider options (the plugin's `apply` projects them per search). */
 export interface TavilySearchProviderOptions {
   /** Tavily API key. Empty/absent makes the provider unavailable. */
   apiKey: string
@@ -36,8 +39,7 @@ export interface TavilySearchProviderOptions {
 
 /**
  * Map one Tavily result to a normalized source, or `undefined` when it carries
- * no portable snippet (Tavily's `content` is normally populated; a blank entry
- * is dropped rather than invented).
+ * no portable snippet (a blank entry is dropped rather than invented).
  */
 export function mapTavilyResult(result: TavilyResult): WebSearchSource | undefined {
   const snippet = result.content.trim()
@@ -69,24 +71,27 @@ export function mapTavilyResponse(response: TavilySearchResponse): WebSearchResu
 export class TavilySearchProvider implements WebSearchProvider {
   readonly id = TAVILY_PROVIDER_ID
 
-  constructor(private readonly options: TavilySearchProviderOptions) {}
+  /** @param options - thunk projecting the current settings-section/composition value per search. */
+  constructor(private readonly options: () => TavilySearchProviderOptions) {}
 
   available(): boolean {
-    return this.options.apiKey.length > 0
-      && URL.canParse(this.options.baseURL)
-      && (this.options.maxResults === undefined || (Number.isInteger(this.options.maxResults) && this.options.maxResults > 0))
+    const o = this.options()
+    return o.apiKey.length > 0
+      && URL.canParse(o.baseURL)
+      && (o.maxResults === undefined || (Number.isInteger(o.maxResults) && o.maxResults > 0))
   }
 
   async search(request: WebSearchRequest, signal?: AbortSignal): Promise<WebSearchResult> {
+    const o = this.options()
     // A per-request bound wins over the configured default; either may be absent.
-    const maxResults = request.maxResults ?? this.options.maxResults
+    const maxResults = request.maxResults ?? o.maxResults
     let response: Response
     try {
-      response = await fetch(`${this.options.baseURL}/search`, {
+      response = await fetch(`${o.baseURL}/search`, {
         method: 'POST',
         redirect: 'error',
         headers: {
-          'authorization': `Bearer ${this.options.apiKey}`,
+          'authorization': `Bearer ${o.apiKey}`,
           'content-type': 'application/json',
           'accept': 'application/json',
           'user-agent': USER_AGENT,
