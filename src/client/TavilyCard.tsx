@@ -17,25 +17,22 @@ export type TavilyCardProps =
   PropsRuntime<'settings.section'>
   & InjectFace<TavilyCardFace>
 
-/** Card shell chrome (mirrors the official PluginCard look). */
-const cardStyle: React.CSSProperties = {
-  border: '1px solid rgba(128, 128, 128, 0.25)',
-  borderRadius: 12,
-  padding: '16px 20px',
-  background: 'var(--bg, transparent)',
-  marginBottom: 16,
-}
-
+/** Section chrome (mirrors the settings shell's own sections). */
 const titleStyle: React.CSSProperties = {
-  fontSize: 15,
+  fontSize: 17,
   fontWeight: 600,
-  margin: '0 0 4px',
+  margin: '0 0 6px',
 }
 
-const descStyle: React.CSSProperties = {
+const introStyle: React.CSSProperties = {
   fontSize: 13,
-  opacity: 0.6,
-  margin: '0 0 12px',
+  opacity: 0.65,
+  margin: '0 0 16px',
+  maxWidth: 520,
+}
+
+const groupStyle: React.CSSProperties = {
+  maxWidth: 420,
 }
 
 const actionsStyle: React.CSSProperties = {
@@ -64,7 +61,7 @@ const discardStyle: React.CSSProperties = {
   border: '1px solid rgba(128, 128, 128, 0.4)',
 }
 
-/** Render the Tavily card in the plugins tab. */
+/** Render the Tavily settings section. */
 export function TavilyCard(props: TavilyCardProps) {
   const { tavilyCard } = props
   const state = useSyncExternalStore(tavilyCard.subscribe, tavilyCard.getState)
@@ -72,9 +69,10 @@ export function TavilyCard(props: TavilyCardProps) {
   const disabled = !state.writable
   const hasEdits = Object.keys(draft).length > 0
   return (
-    <section style={cardStyle}>
-      <h3 style={titleStyle}>{zh.webSearchTitle}</h3>
-      <p style={descStyle}>{zh.webSearchDescription}</p>
+    <section>
+      <h2 style={titleStyle}>{zh.webSearchTitle}</h2>
+      <p style={introStyle}>{zh.webSearchDescription}</p>
+      <div style={groupStyle}>
       <SecretField
         id="tavily-section-api-key"
         label={zh.webSearchApiKey}
@@ -119,6 +117,7 @@ export function TavilyCard(props: TavilyCardProps) {
             {zh.discard}
           </button>
         ) : null}
+      </div>
       </div>
     </section>
   )
