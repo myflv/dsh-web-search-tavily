@@ -63,6 +63,12 @@ export class TavilyCardController {
     return this.state
   }
 
+  /** key 在本卡片之外被写/删（CLI、凭据文件）时刷新徽标状态。 */
+  refreshCredential = (ref: string): void => {
+    if (ref !== this.credential.ref) return
+    void this.readCredential()
+  }
+
   /** 写 key 到凭据域（空值忽略），随后重读凭据状态。 */
   save = async (apiKey: string): Promise<void> => {
     const value = apiKey.trim()

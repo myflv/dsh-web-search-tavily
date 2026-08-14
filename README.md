@@ -2,7 +2,7 @@
 
 Tavily 搜索 provider，接入 DeepSeek Harness 的 web 能力缝（`ctx.web`），取代官方 `@deepseek-ai/dsh-web-search-deepseek`（不需要 DeepSeek 官方 key，用 Tavily key）。
 
-**bundle 形态插件**：自带 `cordis.patch.yml`，`dsh plugin add` 后 reconcile 自动挂载激活（自动覆盖 `web.searchProvider: tavily`、禁用 deepseek），无需手动写 patch。配置走参数（组合 config + 环境变量），不提供独立设置 UI。
+**bundle 形态插件**：自带 `cordis.patch.yml`，`dsh plugin add` 后 reconcile 自动挂载激活（自动覆盖 `web.searchProvider: tavily`、禁用 deepseek），无需手动写 patch。设置页提供「Tavily 搜索」区块（provider 行 + 密钥圆点 + 编辑/删除），key 经凭据域写入；组合 config 与 `TAVILY_API_KEY` 环境变量同样生效（config 字面量优先）。
 
 ## 快速开始
 
@@ -43,7 +43,7 @@ git tag v0.1.1 && git push origin v0.1.1
 | 项 | 默认 | 说明 |
 |---|---|---|
 | `apiKey` | `$TAVILY_API_KEY` | Tavily key（tavily.com 注册；MCP 端点的 `tvly-dev-` key 对 REST API 同样有效）。环境变量方式：compose 的 environment 加 `TAVILY_API_KEY`；或组合 config 直接写 `apiKey` |
-| `apiKeyEnv` | `TAVILY_API_KEY` | 凭据引用名（环境变量），key 从 launch environment 读取 |
+| `apiKeyEnv` | `TAVILY_API_KEY` | 凭据引用名，key 经 credentials 服务解析（仅影响服务端；设置 UI 固定操作默认引用） |
 | `baseURL` | `https://api.tavily.com` | API 根，自动拼 `/search` |
 | `maxResults` | 不设 | 默认结果数（请求级 `maxResults` 优先） |
 

@@ -26,7 +26,6 @@ export const zh = {
   cancel: '取消',
   save: '保存',
 }
-
 export const en: Record<keyof typeof zh, string> = {
   nav: 'Tavily Search',
   webSearchTitle: 'Tavily Search',

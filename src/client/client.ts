@@ -15,7 +15,7 @@ const { en, NS, zh } = require('./locales.js') as typeof import('./locales.js')
 export const name = 'web-search-tavily'
 
 /** Services this browser plugin needs. */
-export const inject = ['slots', 'locale', 'settingsScope', 'connection']
+export const inject = ['slots', 'locale', 'settingsScope', 'connection', 'remote']
 
 /** Register the Tavily settings section. */
 export function apply(ctx: ClientContext): void {
@@ -28,6 +28,11 @@ export function apply(ctx: ClientContext): void {
     api,
   )
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'web-search-tavily: section locale')
+  // key 可从其他面写入（CLI/凭据文件）——凭据变更广播时刷新徽标
+  ctx.effect(
+    () => ctx.remote.$on('credentials/updated', (ref) => { controller.refreshCredential(ref) }),
+    'web-search-tavily: credential invalidations',
+  )
 
   // Independent settings section (shell's own declaration, stable across
   // plugin sets); the plugins-tab card slot styles would need the official

@@ -45,8 +45,8 @@ export interface Config {
 }
 
 export const Config: z<Config> = z.object({
-  apiKey: z.string(),
-  apiKeyEnv: z.string(),
+  apiKey: z.string().role('secret'), // seam 按 role('secret') 脱敏，key 不进 describe 响应
+  apiKeyEnv: z.string().role('credential-ref'),
   baseURL: z.string(),
   maxResults: z.number().step(1).min(1),
 })

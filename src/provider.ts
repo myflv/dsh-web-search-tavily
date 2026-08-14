@@ -119,7 +119,10 @@ export class TavilySearchProvider implements WebSearchProvider {
         const detail = parsed.error ?? parsed.message
         if (detail !== undefined && detail.length > 0) message = detail
       } catch (error: unknown) {
-        abortWebError(error) // 中止要按 WEB_ABORTED 上报，不能被吞成 HTTP 错误
+        // 中止按 WEB_ABORTED 上报；其余情况保留已组好的 HTTP 状态信息
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          throw new WebError('Tavily search aborted', 'WEB_ABORTED', { cause: error })
+        }
       }
       throw new WebError(message, 'WEB_PROVIDER_ERROR')
     }
