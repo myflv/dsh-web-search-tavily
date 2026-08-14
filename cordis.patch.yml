@@ -1,0 +1,12 @@
+# dsh-web-search-tavily bundle patch：安装即激活（dsh plugin add 后 reconcile 自动挂载）
+- insert:
+    - id: web-search-tavily
+      name: dsh-web-search-tavily
+      config:
+        apiKey: !!js process.env.TAVILY_API_KEY
+# 覆盖 base 组合写死的 searchProvider（config ?? env，env 永远被短路）
+- id: web
+  config:
+    searchProvider: tavily
+- id: web-search-deepseek
+  disabled: true
