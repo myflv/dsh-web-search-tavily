@@ -41,3 +41,14 @@ export function apply(ctx: ClientContext): void {
     }, TavilyCard)
   })
 }
+
+// Self-registration (classic-script artifact): the loader executes this bundle
+// via a <script> tag; externals resolve through the injected require.
+interface LoaderHandoff {
+  id: string
+  factory: (require: (spec: string) => unknown) => Record<string, unknown>
+}
+;(globalThis as unknown as { __ModuleLoader__: { load(handoff: LoaderHandoff): void } }).__ModuleLoader__.load({
+  id: 'web-search-tavily',
+  factory: (require) => ({ name, inject, apply }),
+})
