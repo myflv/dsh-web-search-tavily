@@ -5,6 +5,8 @@
  * package's public export face).
  */
 
+const React = require('react') as typeof import('react')
+
 /** Shared field chrome: label, hint, edit affordance, disabled state. */
 export interface FieldProps {
   /** Stable DOM id (label wiring). */

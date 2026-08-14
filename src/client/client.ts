@@ -12,9 +12,9 @@ import type { ConnectionHandle } from '@deepseek-ai/dsh-client-connection/client
 // (settingsScope, slots, locale) and the SlotMap.
 import type {} from '@deepseek-ai/dsh-client-locale/client'
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
-import { TavilyCardController } from './tavily-card-controller.js'
-import { TavilyCard } from './TavilyCard.js'
-import { en, NS, zh } from './locales.js'
+const { TavilyCardController } = require('./tavily-card-controller.js') as typeof import('./tavily-card-controller.js')
+const { TavilyCard } = require('./TavilyCard.js') as typeof import('./TavilyCard.js')
+const { en, NS, zh } = require('./locales.js') as typeof import('./locales.js')
 
 /** Cordis plugin name (matches the host half and the boot row id). */
 export const name = 'web-search-tavily'

@@ -4,10 +4,10 @@
  * the settings section.
  */
 
-import * as React from 'react'
-import { useSyncExternalStore } from 'react'
+const React = require('react') as typeof import('react')
+const { useSyncExternalStore } = require('react') as typeof import('react')
 import type { InjectFace, PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
-import { SecretField, ValueField } from './fields.js'
+const { SecretField, ValueField } = require('./fields.js') as typeof import('./fields.js')
 import type { TavilyCardFace } from './tavily-card-controller.js'
 
 /** Props the renderer binds for the Tavily card. */
