@@ -63,12 +63,14 @@ export class TavilyCardController {
     void this.readCredential()
   }
 
-  subscribe(listener: () => void): () => void {
+  // Arrow-function properties bind `this` to the instance: the face is
+  // passed to useSyncExternalStore as a bare function reference.
+  subscribe = (listener: () => void): () => void => {
     this.listeners.add(listener)
     return () => { this.listeners.delete(listener) }
   }
 
-  getState(): TavilyCardState {
+  getState = (): TavilyCardState => {
     return this.state
   }
 
@@ -76,7 +78,7 @@ export class TavilyCardController {
    * Commit staged edits: value fields through the settings scope, the key
    * through the credentials domain; then re-read the credential state.
    */
-  async save(edits: { baseURL?: string; maxResults?: string; apiKey?: string }): Promise<void> {
+  save = async (edits: { baseURL?: string; maxResults?: string; apiKey?: string }): Promise<void> => {
     if (edits.baseURL !== undefined) await this.scope.set('baseURL', edits.baseURL)
     if (edits.maxResults !== undefined) {
       const n = edits.maxResults.trim()

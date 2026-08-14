@@ -34,14 +34,12 @@ export function apply(ctx: ClientContext): void {
   )
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'web-search-tavily: section locale')
 
-  // Appears in the Settings shell once the shell's declaration is on the
-  // ledger (slots.inject waits for it); the section edits the plugin's
-  // settings namespace and the credential it references.
-  ctx.slots.inject('settings.section', () => ctx.slots.register({
-    name: 'settings.section',
+  // The plugins tab's card slot (declared by the plugins tab entry);
+  // slots.inject waits for the declaration, then registers the card.
+  ctx.slots.inject('settings.plugin.item', () => ctx.slots.register({
+    name: 'settings.plugin.item',
     id: NS,
-    order: 100,
-    label: () => t('nav'),
+    order: 1,
     locale: NS,
     inject: () => ({ tavilyCard: controller }),
   }, TavilyCard))

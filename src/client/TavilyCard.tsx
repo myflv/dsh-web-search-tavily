@@ -2,7 +2,7 @@
  * The Tavily search provider settings section: its endpoint, its per-request
  * result budget, and the key — written through the credentials domain, never
  * into the settings section. Rendered by the Settings shell's
- * `settings.section` slot (the shell's own declaration).
+ * `settings.plugin.item` card slot (the plugins tab's declaration).
  */
 
 const React = require('react') as typeof import('react')
@@ -14,7 +14,7 @@ import type { TavilyCardFace } from './tavily-card-controller.js'
 
 /** Props the renderer binds for the Tavily settings section. */
 export type TavilyCardProps =
-  PropsRuntime<'settings.section'>
+  PropsRuntime<'settings.plugin.item'>
   & InjectFace<TavilyCardFace>
 
 /** Render the Tavily settings section. */
