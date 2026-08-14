@@ -25,6 +25,13 @@ export const inject = ['slots', 'locale', 'settingsScope', 'connection']
 /** Register the Tavily settings section. */
 export function apply(ctx: ClientContext): void {
   const t = ctx.locale.bind(NS)
+  // Controller is a singleton owned by this plugin fiber (official pattern):
+  // constructed once at apply, its face is shared by every render.
+  const { api } = ctx.get('connection') as ConnectionHandle
+  const controller = new TavilyCardController(
+    ctx.settingsScope.bind({ namespace: NS }),
+    api,
+  )
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'web-search-tavily: section locale')
 
   // Appears in the Settings shell once the shell's declaration is on the
@@ -36,13 +43,6 @@ export function apply(ctx: ClientContext): void {
     order: 100,
     label: () => t('nav'),
     locale: NS,
-    inject: () => {
-      const { api } = ctx.get('connection') as ConnectionHandle
-      const controller = new TavilyCardController(
-        ctx.settingsScope.bind({ namespace: NS }),
-        api,
-      )
-      return { tavilyCard: controller }
-    },
+    inject: () => ({ tavilyCard: controller }),
   }, TavilyCard))
 }
