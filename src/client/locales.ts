@@ -14,6 +14,12 @@ export const NS = 'web-search-tavily'
 
 export const zh = {
   nav: 'Tavily 搜索',
+  providerName: 'Tavily',
+  edit: '编辑',
+  delete: '删除',
+  cancel: '取消',
+  keyConfigured: 'API 密钥已配置',
+  keyMissing: 'API 密钥缺失',
   webSearchTitle: 'Tavily 搜索',
   webSearchDescription: '配置 Tavily 搜索 provider（取代 DeepSeek 官方搜索）',
   webSearchApiKey: 'API Key',
@@ -32,6 +38,12 @@ export const zh = {
 
 export const en: Record<keyof typeof zh, string> = {
   nav: 'Tavily Search',
+  providerName: 'Tavily',
+  edit: 'Edit',
+  delete: 'Delete',
+  cancel: 'Cancel',
+  keyConfigured: 'API key configured',
+  keyMissing: 'API key missing',
   webSearchTitle: 'Tavily Search',
   webSearchDescription: 'Configure the Tavily search provider (replaces DeepSeek search)',
   webSearchApiKey: 'API Key',

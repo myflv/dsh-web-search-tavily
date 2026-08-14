@@ -41,6 +41,7 @@ export interface TavilyCardFace {
     subscribe(listener: () => void): () => void
     getState(): TavilyCardState
     save(edits: { baseURL?: string; maxResults?: string; apiKey?: string }): Promise<void>
+    unsetKey(): Promise<void>
   }
 }
 
@@ -91,6 +92,17 @@ export class TavilyCardController {
         // Refusals surface through the re-read below: the Host is the only
         // authority on whether the key now exists.
       }
+    }
+    await this.readCredential()
+    this.emit()
+  }
+
+  /** Remove the configured key through the credentials domain. */
+  unsetKey = async (): Promise<void> => {
+    try {
+      await this.api.credentials.unset({ ref: refOf(this.scope.getSnapshot()) })
+    } catch {
+      // Refusals surface through the re-read below.
     }
     await this.readCredential()
     this.emit()
