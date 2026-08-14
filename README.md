@@ -12,19 +12,31 @@ npm run build    # tsc → lib/（ESM + 类型声明）
 npm pack         # 或直接打包，得到 dsh-web-search-tavily-0.1.0.tgz
 ```
 
-## 安装（容器内）
+## 安装
+
+### 用户侧（推荐，不动共享镜像）
+
+插件是个人私货、镜像由团队共享时用这条。dsh 的 profile 机制原生支持 out-of-tree 插件：Loader 的 `baseUrl` 就是 profile 目录，插件包放进 profile 的 `node_modules` 即被解析；peer 依赖（cordis 等）从 `~/profiles/node_modules` 的 fallback symlink 解析，与安装树共享单实例。
 
 ```bash
-# 把 tarball 拷进容器，全局安装（与 dsh 同一 node_modules 解析根）
-npm install -g --prefix /usr/local /path/to/dsh-web-search-tavily-0.1.0.tgz
+# 本机产出 tarball
+npm install && npm pack
+
+# tarball 弄到 NAS（scp / docker cp / 容器内 npm pack 均可）
+
+# 容器内（工作区卷，容器重建不丢）
+PROFILE=$(ls /root/profiles | head -1)   # profile 目录名
+mkdir -p /root/profiles/$PROFILE/node_modules/dsh-web-search-tavily
+tar xzf dsh-web-search-tavily-0.1.0.tgz \
+    -C /root/profiles/$PROFILE/node_modules/dsh-web-search-tavily --strip-components=1
 ```
 
-持久化：加进 Dockerfile（在 `npm install -g @deepseek-ai/dsh` 之后）：
+> 别用 `npm install --prefix ...` 装——npm 11 的 `auto-install-peers` 已失效，会把 cordis 等 peer 重复装进 profile，双实例风险。手动解压与官方 `autoInstallPeers: false` 布局等价。
 
-```dockerfile
-COPY dsh-web-search-tavily-0.1.0.tgz /tmp/
-RUN npm install -g --prefix /usr/local --no-audit --no-fund /tmp/dsh-web-search-tavily-0.1.0.tgz \
-    && rm /tmp/dsh-web-search-tavily-0.1.0.tgz
+### 镜像级（可选，你能改 Dockerfile 时）
+
+```bash
+npm install -g --prefix /usr/local /path/to/dsh-web-search-tavily-0.1.0.tgz
 ```
 
 ## 启用（profile patch）
