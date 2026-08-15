@@ -12,6 +12,7 @@ on:
 
 permissions:
   contents: write
+  id-token: write  # OIDC：npm Trusted Publishing（无需 NPM_TOKEN 长期凭证）
 
 jobs:
   build:
@@ -42,7 +43,5 @@ jobs:
           gh release create "${{ inputs.version }}" dsh-web-search-tavily.tgz --generate-notes
         env:
           GH_TOKEN: ${{ github.token }}
-      - name: 发布到 npm
-        run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: 发布到 npm（Trusted Publishing + provenance 签名）
+        run: npm publish --provenance --access public
