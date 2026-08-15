@@ -15,7 +15,7 @@ export const NS = 'web-search-tavily'
 export const zh = {
   nav: 'Tavily 搜索',
   webSearchTitle: 'Tavily 搜索',
-  webSearchDescription: '填入 Tavily API 密钥即可使用 Tavily 搜索（取代 DeepSeek 官方搜索）',
+  webSearchDescription: 'Tavily 搜索（取代 DeepSeek 官方搜索）——密钥可选，未配置自动走官方 keyless 免费模式',
   webSearchApiKey: 'API Key',
   webSearchApiKeyHint: 'tavily.com 注册的 key；经凭据域写入，不进设置文档',
   webSearchApiKeySet: '已配置',
@@ -29,7 +29,7 @@ export const zh = {
 export const en: Record<keyof typeof zh, string> = {
   nav: 'Tavily Search',
   webSearchTitle: 'Tavily Search',
-  webSearchDescription: 'Enter your Tavily API key to enable Tavily search (replaces DeepSeek search)',
+  webSearchDescription: 'Tavily search (replaces DeepSeek search) — key optional, keyless mode when unset',
   webSearchApiKey: 'API Key',
   webSearchApiKeyHint: 'Key from tavily.com; written through the credentials domain',
   webSearchApiKeySet: 'Configured',

@@ -2,7 +2,7 @@
 
 Tavily 搜索 provider，接入 DeepSeek Harness 的 web 能力缝（`ctx.web`），取代官方 `@deepseek-ai/dsh-web-search-deepseek`（不需要 DeepSeek 官方 key，用 Tavily key）。
 
-**bundle 形态插件**：自带 `cordis.patch.yml`，`dsh plugin add` 后 reconcile 自动挂载激活（自动覆盖 `web.searchProvider: tavily`、禁用 deepseek），无需手动写 patch。设置页提供「Tavily 搜索」区块（provider 行 + 密钥圆点 + 编辑/删除），key 经凭据域写入；组合 config 与 `TAVILY_API_KEY` 环境变量同样生效（config 字面量优先）。
+**bundle 形态插件**：自带 `cordis.patch.yml`，`dsh plugin add` 后 reconcile 自动挂载激活（自动覆盖 `web.searchProvider: tavily`、禁用 deepseek），无需手动写 patch。设置页提供「Tavily 搜索」区块（provider 行 + 密钥圆点 + 编辑/删除）。**密钥可选**：未配置时自动发送官方 `X-Tavily-Access-Mode: keyless` 头（免费模式，响应与带 key 一致）；配置了 key 则走 Bearer。
 
 ## 快速开始
 

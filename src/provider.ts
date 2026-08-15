@@ -83,10 +83,9 @@ export class TavilySearchProvider implements WebSearchProvider {
     // settings write landing inside that await must not send the key resolved
     // from the old section to the endpoint named by the new one.
     const o = this.options()
+    // key 可选：未配置时走官方 keyless 免费模式（X-Tavily-Access-Mode 头）
     const apiKey = o.apiKey ?? await o.resolveApiKey()
-    if (apiKey === undefined || apiKey.length === 0) {
-      throw new WebError('Tavily search requires an API key (configure it in Settings → Tavily 搜索)', 'WEB_PROVIDER_ERROR')
-    }
+    const hasKey = apiKey !== undefined && apiKey.length > 0
     // A per-request bound wins over the configured default; either may be absent.
     const maxResults = request.maxResults ?? o.maxResults
     let response: Response
@@ -95,7 +94,7 @@ export class TavilySearchProvider implements WebSearchProvider {
         method: 'POST',
         redirect: 'error',
         headers: {
-          'authorization': `Bearer ${apiKey}`,
+          ...(hasKey ? { 'authorization': `Bearer ${apiKey}` } : { 'X-Tavily-Access-Mode': 'keyless' }),
           'content-type': 'application/json',
           'accept': 'application/json',
           'user-agent': USER_AGENT,
