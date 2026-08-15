@@ -11,7 +11,7 @@ import type { TavilyCardFace } from './tavily-card-controller.js'
 
 /** Props the renderer binds for the Tavily settings section. */
 export type TavilyCardProps =
-  PropsRuntime<'settings.section'>
+  PropsRuntime<'settings.plugin.item'>
   & InjectFace<TavilyCardFace>
 
 /** Render the Tavily card (official PluginCard chrome). */
