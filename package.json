@@ -1,5 +1,5 @@
 {
-  "name": "dsh-web-search-tavily",
+  "name": "@myflv/dsh-web-search-tavily",
   "description": "Tavily-backed search provider for the DeepSeek Harness web capability seam (ctx.web)",
   "version": "0.1.5",
   "type": "module",
@@ -70,5 +70,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.json && node scripts/build-client.mjs",
     "pack": "npm run build && npm pack"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

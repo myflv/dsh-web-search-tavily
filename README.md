@@ -8,9 +8,11 @@ Tavily 搜索 provider，接入 DeepSeek Harness 的 web 能力缝（`ctx.web`�
 
 ```bash
 # 容器内（不动共享镜像；profile 在工作区卷，容器重建不丢）
-curl -sL -o /tmp/dsh-web-search-tavily.tgz \
-    https://github.com/myflv/dsh-web-search-tavily/releases/latest/download/dsh-web-search-tavily.tgz
-dsh plugin --profile web add /tmp/dsh-web-search-tavily.tgz
+dsh plugin --profile web add @myflv/dsh-web-search-tavily
+
+# 或 GitHub release tarball（无 npm 账号时）
+# curl -sL -o /tmp/dsh-web-search-tavily.tgz https://github.com/myflv/dsh-web-search-tavily/releases/latest/download/dsh-web-search-tavily.tgz
+# dsh plugin --profile web add /tmp/dsh-web-search-tavily.tgz
 ```
 
 或一键脚本（含 pnpm 前置检查，幂等）：
@@ -30,13 +32,14 @@ bash <(curl -sL https://raw.githubusercontent.com/myflv/dsh-web-search-tavily/ma
 
 ## 构建与发版
 
-CI（`.github/workflows/release.yml`）负责构建：打 tag 即出 GitHub Release（asset 名固定 `dsh-web-search-tavily.tgz`，安装端 `latest/download` 升级无感）：
+**手动发版**（节奏可控）：GitHub Actions → Run workflow → 输入版本号。CI 打 tag + 重建 release + 发布 npm（需 `NPM_TOKEN` secret）：
 
 ```bash
-git tag v0.1.1 && git push origin v0.1.1
+# 本机只推送代码；发版在 Actions 页手动触发
+git push origin main
 ```
 
-升级：容器里重新执行快速开始的 curl + add 两行（reconcile 自动处理）。
+升级：容器里 `dsh plugin --profile web remove @myflv/dsh-web-search-tavily && dsh plugin --profile web add @myflv/dsh-web-search-tavily`。
 
 ## 配置项
 

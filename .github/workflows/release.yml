@@ -1,10 +1,14 @@
 name: release
 
-# 打 tag（v*）即出 release：CI 构建 tarball 挂到 Release，
-# NAS 容器一条 curl 管道解压安装（零现场构建、零包管理器依赖）
+# 手动发版（节奏可控）：Actions → Run workflow → 输入版本号（如 v0.1.5）。
+# CI 打 tag（幂等）+ 重建 release（幂等）+ 发布 npm。不监听 push tag——
+# force-push/日常提交不会误触发发版。
 on:
-  push:
-    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '发版版本号（如 v0.1.5）'
+        required: true
 
 permissions:
   contents: write
@@ -14,21 +18,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
+          registry-url: 'https://registry.npmjs.org'
       - run: npm ci
       # 固定 asset 名（不带版本），安装端 URL 永远 latest/download/dsh-web-search-tavily.tgz
-      - run: npm run pack && mv dsh-web-search-tavily-*.tgz dsh-web-search-tavily.tgz
-      - name: 发布到 GitHub Release
-        # force-push tag 会重复触发：release 已存在时删除重建（不删 tag——
-        # tag 已指向本次构建的 commit，create 直接复用；--cleanup-tag 会让
-        # create 在默认分支 HEAD 重建 tag，release 元数据与产物脱钩）
+      - run: npm run pack && mv *-*.tgz dsh-web-search-tavily.tgz
+      - name: 打 tag（已存在则跳过，幂等）
         run: |
-          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            gh release delete "$GITHUB_REF_NAME" --yes
+          if ! git rev-parse -q --verify "refs/tags/${{ inputs.version }}" >/dev/null; then
+            git tag "${{ inputs.version }}"
+            git push origin "${{ inputs.version }}"
           fi
-          gh release create "$GITHUB_REF_NAME" dsh-web-search-tavily.tgz --generate-notes
+      - name: 发布到 GitHub Release（已存在则删除重建，保证 tarball 最新）
+        run: |
+          if gh release view "${{ inputs.version }}" >/dev/null 2>&1; then
+            gh release delete "${{ inputs.version }}" --yes
+          fi
+          gh release create "${{ inputs.version }}" dsh-web-search-tavily.tgz --generate-notes
         env:
           GH_TOKEN: ${{ github.token }}
+      - name: 发布到 npm
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
