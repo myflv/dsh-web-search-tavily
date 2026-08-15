@@ -33,7 +33,7 @@ export const WEB_SEARCH_TAVILY_SETTINGS_NAMESPACE = 'web-search-tavily'
 export interface Config {
   /** Tavily API key; blank inherits the composition layer (env patch). */
   apiKey?: string
-  /** Endpoint base; `/search` is appended. Defaults to the public API. */
+  /** Complete endpoint URL; defaults to the public Tavily API. */
   baseURL?: string
   /** Default result count when a request carries no `maxResults`. Omitted = none. */
   maxResults?: number

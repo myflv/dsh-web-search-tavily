@@ -13,8 +13,8 @@ import type { TavilyError, TavilyResult, TavilySearchResponse } from './types.js
 /** Stable id this provider registers under; the web section's `searchProvider` points at it. */
 export const TAVILY_PROVIDER_ID = 'tavily'
 
-/** Default Tavily endpoint; `/search` is the operation. */
-export const TAVILY_DEFAULT_BASE_URL = 'https://api.tavily.com'
+/** Default Tavily endpoint (complete URL, `/search` included). */
+export const TAVILY_DEFAULT_BASE_URL = 'https://api.tavily.com/search'
 
 /** Attribution header sent on every request. Bump with the package version. */
 const USER_AGENT = 'dsh-web-search-tavily' // 版本随包发版，避免双源漂移
@@ -23,7 +23,7 @@ const USER_AGENT = 'dsh-web-search-tavily' // 版本随包发版，避免双源�
 export interface TavilySearchProviderOptions {
   /** Tavily API key (settings section value); absent → keyless mode. */
   apiKey?: string
-  /** Endpoint base; `/search` is appended. */
+  /** Complete endpoint URL (custom reverse proxies write their own path). */
   baseURL: string
   /** Default result count when a request carries no `maxResults`. */
   maxResults?: number
@@ -82,7 +82,7 @@ export class TavilySearchProvider implements WebSearchProvider {
     const maxResults = request.maxResults ?? o.maxResults
     let response: Response
     try {
-      response = await fetch(`${o.baseURL}/search`, {
+      response = await fetch(o.baseURL, {
         method: 'POST',
         redirect: 'error',
         headers: {

@@ -47,6 +47,8 @@ export interface FieldProps {
 export function ValueField(props: FieldProps & {
   /** Hints a numeric keypad without narrowing what the control accepts. */
   numeric?: boolean
+  /** Placeholder shown while the draft is empty. */
+  placeholder?: string
 }) {
   return (
     <div className={css.field}>
@@ -75,6 +77,7 @@ export function ValueField(props: FieldProps & {
         inputMode={props.numeric ? 'numeric' : undefined}
         {...props.invalid ? { 'aria-invalid': true } : {}}
         value={props.text}
+        placeholder={props.placeholder}
         disabled={props.disabled}
         onChange={(event) => { props.onEdit(event.target.value) }}
       />

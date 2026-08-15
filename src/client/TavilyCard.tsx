@@ -97,6 +97,7 @@ export function TavilyCard(props: TavilyCardProps) {
         resetLabel={t('reset')}
         invalidLabel={t('invalidNumber')}
         disabled={false}
+        placeholder="https://api.tavily.com/search"
         text={baseURLDraft}
         overridden={state.baseURL !== undefined}
         invalid={false}
@@ -112,6 +113,7 @@ export function TavilyCard(props: TavilyCardProps) {
         invalidLabel={t('invalidNumber')}
         disabled={false}
         numeric
+        placeholder="5"
         text={maxResultsDraft}
         overridden={state.maxResults !== undefined}
         invalid={maxResultsInvalid}

@@ -21,7 +21,7 @@ bash <(curl -sL https://raw.githubusercontent.com/myflv/dsh-web-search-tavily/ma
 | 项 | 默认 | 说明 |
 |---|---|---|
 | `apiKey` | `$TAVILY_API_KEY` | Tavily key（tavily.com 注册；MCP 的 `tvly-dev-` key 同样有效）。设置 UI 直接填；空 → 自动走官方 keyless 免费模式 |
-| `baseURL` | `https://api.tavily.com` | API 根，自动拼 `/search` |
+| `baseURL` |  `https://api.tavily.com/search` | 完整端点地址（含 /search）；自定义反代填自己的地址 |
 | `maxResults` | 不设 | 默认结果数 |
 
 三字段均可在设置页 UI 明文编辑，清空保存即恢复默认。环境变量方式：compose 的 environment 加 `TAVILY_API_KEY=你的key`。
