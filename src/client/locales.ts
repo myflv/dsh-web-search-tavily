@@ -13,10 +13,10 @@ export type TavilyCopyKey = keyof typeof zh
 export const NS = 'web-search-tavily'
 
 export const zh = {
-  webSearchTitle: 'Tavily 搜索',
-  webSearchDescription: 'Tavily 搜索 provider。',
+  webSearchTitle: '网页搜索',
+  webSearchDescription: 'Tavily 搜索提供方。',
   webSearchApiKey: 'API Key',
-  webSearchApiKeyHint: '未配置时自动走官方 keyless 免费模式',
+  webSearchApiKeyHint: '未配置时使用keyless模式',
   webSearchApiKeySet: '已配置',
   webSearchApiKeyUnset: '未配置',
   providerName: 'Tavily',
@@ -33,10 +33,10 @@ export const zh = {
   expand: '展开',
 }
 export const en: Record<keyof typeof zh, string> = {
-  webSearchTitle: 'Tavily Search',
+  webSearchTitle: 'Web search',
   webSearchDescription: 'The Tavily search provider.',
   webSearchApiKey: 'API Key',
-  webSearchApiKeyHint: 'Unset uses the official keyless mode',
+  webSearchApiKeyHint: 'Unset uses keyless mode',
   webSearchApiKeySet: 'Configured',
   webSearchApiKeyUnset: 'Not configured',
   providerName: 'Tavily',
