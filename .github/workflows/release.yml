@@ -26,8 +26,16 @@ jobs:
           node-version: 24   # npm ≥11.5.1（OIDC 前提）；registry-url 不设——空 token 会挡 OIDC 认证
           cache: npm
       - run: npm ci
+      # 输入版本必须与 package.json version 一致（npm publish 发的是包版本）
+      - name: 校验版本一致性
+        run: |
+          PKG="v$(node -p "require('./package.json').version")"
+          if [ "$PKG" != "${{ inputs.version }}" ]; then
+            echo "版本不一致：package.json=$PKG，输入=${{ inputs.version }}" >&2
+            exit 1
+          fi
       # 固定 asset 名（不带版本），安装端 URL 永远 latest/download/dsh-web-search-tavily.tgz
-      - run: npm run pack && mv *-*.tgz dsh-web-search-tavily.tgz
+      - run: npm run pack && mv myflv-dsh-web-search-tavily-*.tgz dsh-web-search-tavily.tgz
       - name: 打 tag（已存在则跳过，幂等）
         run: |
           if ! git rev-parse -q --verify "refs/tags/${{ inputs.version }}" >/dev/null; then

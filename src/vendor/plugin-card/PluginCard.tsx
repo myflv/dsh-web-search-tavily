@@ -14,13 +14,12 @@
  * disabled card the user cannot act on.
  */
 
-const React = require('react') as typeof import('react')
-const { useState } = require('react') as typeof import('react')
-const { clsx } = require('clsx') as typeof import('clsx')
-const { IconChevronDownOutline14 } = require('@deepseek-ai/dsh-client-ui-primitives') as typeof import('@deepseek-ai/dsh-client-ui-primitives')
-const css = require('./PluginCard.module.css') as Record<string, string>
-import type { ReactNode } from 'react'
-import type { CardShell } from './types.js'
+import * as React from 'react'
+import { useState, type ReactNode } from 'react'
+import { clsx } from 'clsx'
+import { IconChevronDownOutline14 } from '@deepseek-ai/dsh-client-ui-primitives'
+import css from './PluginCard.module.css'
+import type { CardShell } from '@deepseek-ai/dsh-client-ui-settings-plugins/client'
 
 
 /** Card chrome shared by every plugin section. */

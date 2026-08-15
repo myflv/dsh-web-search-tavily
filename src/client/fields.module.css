@@ -7,9 +7,7 @@
   padding: 12px 0;
 }
 
-.field + .field {
-  border-top: 1px solid var(--dsw-alias-border-l2);
-}
+
 
 .head {
   display: flex;
@@ -52,16 +50,7 @@
   color: var(--dsw-alias-label-tertiary);
 }
 
-.reset {
-  border: none;
-  background: none;
-  padding: 0;
-  font: inherit;
-  font-size: 12px;
-  line-height: 1.5;
-  color: var(--dsw-alias-label-secondary);
-  cursor: pointer;
-}
+
 
 .reset:hover:not(:disabled) {
   color: var(--dsw-alias-label-primary);
@@ -93,17 +82,9 @@
   cursor: default;
 }
 
-.inputInvalid {
-  composes: input;
-  border-color: var(--dsw-alias-label-error);
-}
 
-.invalid {
-  margin: 0;
-  font-size: 12px;
-  line-height: 1.5;
-  color: var(--dsw-alias-label-error);
-}
+
+
 
 .hint {
   margin: 0;

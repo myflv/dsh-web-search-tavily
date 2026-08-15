@@ -20,7 +20,7 @@ export const TAVILY_DEFAULT_BASE_URL = 'https://api.tavily.com'
 export const TAVILY_DEFAULT_API_KEY_REF = 'TAVILY_API_KEY'
 
 /** Attribution header sent on every request. Bump with the package version. */
-const USER_AGENT = 'dsh-web-search-tavily/0.1.4'
+const USER_AGENT = 'dsh-web-search-tavily' // 版本随包发版，避免双源漂移
 
 /** Resolved provider options (the plugin's `apply` projects them per search). */
 export interface TavilySearchProviderOptions {
@@ -119,9 +119,7 @@ export class TavilySearchProvider implements WebSearchProvider {
         if (detail !== undefined && detail.length > 0) message = detail
       } catch (error: unknown) {
         // 中止按 WEB_ABORTED 上报；其余情况保留已组好的 HTTP 状态信息
-        if (error instanceof DOMException && error.name === 'AbortError') {
-          throw new WebError('Tavily search aborted', 'WEB_ABORTED', { cause: error })
-        }
+        if (isAbortError(error)) throw new WebError('Tavily search aborted', 'WEB_ABORTED', { cause: error })
       }
       throw new WebError(message, 'WEB_PROVIDER_ERROR')
     }
@@ -135,10 +133,13 @@ export class TavilySearchProvider implements WebSearchProvider {
   }
 }
 
-/** 中止信号统一抛 WEB_ABORTED（fetch 或响应体解析阶段）。 */
+/** 中止判定（fetch/响应解析共用）。 */
+function isAbortError(error: unknown): boolean {
+  return error instanceof DOMException && error.name === 'AbortError'
+}
+
+/** 中止按 WEB_ABORTED 上报，其余按 provider 错误（保留原因）。 */
 function abortWebError(error: unknown): never {
-  if (error instanceof DOMException && error.name === 'AbortError') {
-    throw new WebError('Tavily search aborted', 'WEB_ABORTED', { cause: error })
-  }
+  if (isAbortError(error)) throw new WebError('Tavily search aborted', 'WEB_ABORTED', { cause: error })
   throw new WebError(`Tavily search request failed: ${String(error)}`, 'WEB_PROVIDER_ERROR', { cause: error })
 }

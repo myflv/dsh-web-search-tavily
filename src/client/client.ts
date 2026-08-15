@@ -1,11 +1,12 @@
-// 浏览器半：注册 settings.section（shell 自己的声明，跨插件集稳定）；卡片编辑
-// web-search-tavily 配置域与 TAVILY_API_KEY 凭据。
+// 浏览器半：注册插件配置页卡片（settings.plugin.item），编辑 web-search-tavily
+// 配置域与 TAVILY_API_KEY 凭据。
 
 import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
 import type { ConnectionHandle } from '@deepseek-ai/dsh-client-connection/client'
-// Side-effect type imports: these packages augment the Context face
-// (settingsScope, slots, locale) and the SlotMap.
+// Side-effect type imports: augment the Context face (settingsScope, slots,
+// locale) and the SlotMap（含 settings.plugin.item 声明）。
 import type {} from '@deepseek-ai/dsh-client-locale/client'
+import type {} from '@deepseek-ai/dsh-client-ui-settings-plugins/client'
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 const { TavilyCardController } = require('./tavily-card-controller.js') as typeof import('./tavily-card-controller.js')
 const { TavilyCard } = require('./TavilyCard.js') as typeof import('./TavilyCard.js')
@@ -19,7 +20,6 @@ export const inject = ['slots', 'locale', 'settingsScope', 'connection', 'remote
 
 /** Register the Tavily settings section. */
 export function apply(ctx: ClientContext): void {
-  const t = ctx.locale.bind(NS)
   // Controller is a singleton owned by this plugin fiber (official pattern):
   // constructed once at apply, its face is shared by every render.
   const { api } = ctx.get('connection') as ConnectionHandle

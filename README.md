@@ -2,7 +2,7 @@
 
 Tavily 搜索 provider，接入 DeepSeek Harness 的 web 能力缝（`ctx.web`），取代官方 `@deepseek-ai/dsh-web-search-deepseek`（不需要 DeepSeek 官方 key，用 Tavily key）。
 
-**bundle 形态插件**：自带 `cordis.patch.yml`，`dsh plugin add` 后 reconcile 自动挂载激活（自动覆盖 `web.searchProvider: tavily`、禁用 deepseek），无需手动写 patch。设置页提供「Tavily 搜索」区块（provider 行 + 密钥圆点 + 编辑/删除）。**密钥可选**：未配置时自动发送官方 `X-Tavily-Access-Mode: keyless` 头（免费模式，响应与带 key 一致）；配置了 key 则走 Bearer。
+**bundle 形态插件**：自带 `cordis.patch.yml`，`dsh plugin add` 后 reconcile 自动挂载激活（自动覆盖 `web.searchProvider: tavily`、禁用 deepseek），无需手动写 patch。设置页「插件」tab 提供 Tavily 卡片（官方 PluginCard 形态：标题/描述/展开/保存放弃 + API Key 气泡徽标）。**密钥可选**：未配置时自动发送官方 `X-Tavily-Access-Mode: keyless` 头（免费模式）；配置了 key 则走 Bearer。
 
 ## 快速开始
 
@@ -32,7 +32,7 @@ bash <(curl -sL https://raw.githubusercontent.com/myflv/dsh-web-search-tavily/ma
 
 ## 构建与发版
 
-**手动发版**（节奏可控）：GitHub Actions → Run workflow → 输入版本号。CI 打 tag + 重建 release + 发布 npm（需 `NPM_TOKEN` secret）：
+**手动发版**（节奏可控）：GitHub Actions → Run workflow → 输入版本号（须与 package.json version 一致）。CI 校验版本 + 打 tag + 重建 release + npm publish（Trusted Publishing OIDC，需先在 npm 包页面配置 GitHub 授权，无长期凭证）。
 
 ```bash
 # 本机只推送代码；发版在 Actions 页手动触发
@@ -59,3 +59,8 @@ git push origin main
 ```
 
 provider id：`tavily`（`TAVILY_PROVIDER_ID`）——bundle 已自动把 `web.searchProvider` 覆盖为它。
+
+
+## Vendor 说明
+
+`src/vendor/plugin-card/` 与 `src/client/fields.module.css` 从官方 [deepseek-harness](https://github.com/deepseek-ai/deepseek-harness)（MIT）`packages/client/ui-settings-plugins` 复制（PluginCard、SecretField 及样式），构建时经 esbuild css-modules 插件内联。同步官方升级时重拷对应文件并核对 import 适配（类型来自 `@deepseek-ai/dsh-client-ui-settings-plugins/client`）。

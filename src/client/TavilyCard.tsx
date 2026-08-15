@@ -5,51 +5,58 @@ const { useSyncExternalStore } = require('react') as typeof import('react')
 const { PluginCard } = require('../vendor/plugin-card/PluginCard.js') as typeof import('../vendor/plugin-card/PluginCard.js')
 const { SecretField } = require('./fields.js') as typeof import('./fields.js')
 const { zh } = require('./locales.js') as typeof import('./locales.js')
-import type { CardShell } from '../vendor/plugin-card/types.js'
-import type { InjectFace, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
+import type { CardShell } from '@deepseek-ai/dsh-client-ui-settings-plugins/client'
+import type { InjectFace, PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import type { TavilyCardFace } from './tavily-card-controller.js'
 
 /** Props the renderer binds for the Tavily settings section. */
 export type TavilyCardProps =
   PropsRuntime<'settings.plugin.item'>
+  & PropsLocale<'web-search-tavily'>
   & InjectFace<TavilyCardFace>
 
 /** Render the Tavily card (official PluginCard chrome). */
 export function TavilyCard(props: TavilyCardProps) {
-  const { tavilyCard } = props
+  const { tavilyCard, t } = props
   const state = useSyncExternalStore(tavilyCard.subscribe, tavilyCard.getState)
   const [keyDraft, setKeyDraft] = React.useState('')
+  const [saving, setSaving] = React.useState(false)
+  const [failed, setFailed] = React.useState(false)
   const shell: CardShell = {
     available: true,
     writable: state.apiKeyWritable,
-    dirty: keyDraft.trim() !== '',
+    dirty: keyDraft.trim() !== '' || failed,
     invalid: false,
-    saving: false,
-    failed: false,
+    saving,
+    failed,
   }
-  // 官方键名（webSearchTitle/unsaved/readOnly/...）→ 我们的文案
-  const t = (key: string): string => (zh as Record<string, string>)[key] ?? key
   return (
-    <ul style={{ listStyle: 'none', margin: 0, padding: 0, maxWidth: 560 }}>
-      <PluginCard
-        t={t}
-        titleKey="webSearchTitle"
-        descriptionKey="webSearchDescription"
-        state={shell}
-        onSave={() => { void tavilyCard.save(keyDraft); setKeyDraft('') }}
-        onDiscard={() => { setKeyDraft('') }}
-      >
-        <SecretField
-          id="tavily-section-api-key"
-          label={zh.webSearchApiKey}
-          hint={zh.webSearchApiKeyHint}
-          configured={state.apiKeyConfigured}
-          stateLabel={state.apiKeyConfigured ? zh.webSearchApiKeySet : zh.webSearchApiKeyUnset}
-          disabled={!state.apiKeyWritable}
-          text={keyDraft}
-          onEdit={setKeyDraft}
-        />
-      </PluginCard>
-    </ul>
+    // 宿主渲染器已提供 <ul> 列表容器，这里只返回卡片 <li>
+    <PluginCard
+      t={(key: string) => t(key as keyof typeof import('./locales.js').zh)}
+      titleKey="webSearchTitle"
+      descriptionKey="webSearchDescription"
+      state={shell}
+      onSave={() => {
+        setSaving(true)
+        void tavilyCard.save(keyDraft).then((configured) => {
+          setSaving(false)
+          setFailed(!configured)
+          if (configured) setKeyDraft('') // 失败保留草稿（官方 failed 语义）
+        })
+      }}
+      onDiscard={() => { setKeyDraft(''); setFailed(false) }}
+    >
+      <SecretField
+        id="tavily-section-api-key"
+        label={t('webSearchApiKey')}
+        hint={t('webSearchApiKeyHint')}
+        configured={state.apiKeyConfigured}
+        stateLabel={state.apiKeyConfigured ? t('webSearchApiKeySet') : t('webSearchApiKeyUnset')}
+        disabled={!state.apiKeyWritable}
+        text={keyDraft}
+        onEdit={(text) => { setKeyDraft(text); setFailed(false) }}
+      />
+    </PluginCard>
   )
 }

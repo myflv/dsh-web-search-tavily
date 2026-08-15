@@ -27,8 +27,7 @@ export interface TavilyCardFace {
   tavilyCard: {
     subscribe(listener: () => void): () => void
     getState(): TavilyCardState
-    save(apiKey: string): Promise<void>
-    unsetKey(): Promise<void>
+    save(apiKey: string): Promise<boolean>
   }
 }
 
@@ -45,9 +44,7 @@ export class TavilyCardController {
     this.state = this.project()
     // settings 变更不可能改凭据（只经本卡 set/unset），仅在 apiKeyEnv 引用变化时重读
     scope.subscribe(() => {
-      this.state = this.project()
       if (refOf(this.scope.getSnapshot()) !== this.credential.ref) void this.readCredential()
-      this.emit()
     })
     void this.readCredential()
   }
@@ -69,10 +66,10 @@ export class TavilyCardController {
     void this.readCredential()
   }
 
-  /** 写 key 到凭据域（空值忽略），随后重读凭据状态。 */
-  save = async (apiKey: string): Promise<void> => {
+  /** 写 key 到凭据域（空值忽略），返回 Host 是否确认配置（saveFailed 推导依据）。 */
+  save = async (apiKey: string): Promise<boolean> => {
     const value = apiKey.trim()
-    if (value === '') return
+    if (value === '') return this.credential.configured
     try {
       await this.api.credentials.set({ ref: refOf(this.scope.getSnapshot()), value })
     } catch {
@@ -80,19 +77,9 @@ export class TavilyCardController {
       // authority on whether the key now exists.
     }
     await this.readCredential()
-    this.emit()
+    return this.credential.configured
   }
 
-  /** Remove the configured key through the credentials domain. */
-  unsetKey = async (): Promise<void> => {
-    try {
-      await this.api.credentials.unset({ ref: refOf(this.scope.getSnapshot()) })
-    } catch {
-      // Refusals surface through the re-read below.
-    }
-    await this.readCredential()
-    this.emit()
-  }
 
   private project(): TavilyCardState {
     return {
