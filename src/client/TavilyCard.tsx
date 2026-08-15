@@ -1,9 +1,10 @@
 // Tavily provider 卡片：官方 PluginCard 壳 + 官方字段布局（API Key、接口地址、
-// 默认结果条数，全部明文经设置域读写）。组件与样式从官方包内联（esbuild noExternal + css-modules）。
+// 默认结果条数，全部明文经设置域读写，同一 ValueField 形态）。
+// 组件与样式从官方包内联（esbuild noExternal + css-modules）。
 const React = require('react') as typeof import('react')
 const { useSyncExternalStore } = require('react') as typeof import('react')
 const { PluginCard } = require('../vendor/plugin-card/PluginCard.js') as typeof import('../vendor/plugin-card/PluginCard.js')
-const { SecretField, ValueField } = require('./fields.js') as typeof import('./fields.js')
+const { ValueField } = require('./fields.js') as typeof import('./fields.js')
 import type { CardShell } from '@deepseek-ai/dsh-client-ui-settings-plugins/client'
 import type { InjectFace, PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import type { TavilyCardFace } from './tavily-card-controller.js'
@@ -37,7 +38,7 @@ export function TavilyCard(props: TavilyCardProps) {
   const maxResultsInvalid = trimmedMax !== '' && !(Number.isInteger(Number(trimmedMax)) && Number(trimmedMax) >= 1)
   const shell: CardShell = {
     available: true, // 写死：settings 域 status 不 ready 的历史行为（0382761 验证形态）
-    writable: state.writable,
+    writable: true, // 写死：settings 域无独立 writable 信号（同上）
     dirty: keyDraft !== seedKey || baseURLDraft !== seedBaseURL || maxResultsDraft !== seedMaxResults || failed,
     invalid: maxResultsInvalid,
     saving,
@@ -74,13 +75,19 @@ export function TavilyCard(props: TavilyCardProps) {
         setFailed(false)
       }}
     >
-      <SecretField
+      <ValueField
         id="tavily-section-api-key"
         label={t('webSearchApiKey')}
         hint={t('webSearchApiKeyHint')}
-        disabled={!state.writable}
+        overriddenLabel={t('overridden')}
+        resetLabel={t('reset')}
+        invalidLabel={t('invalidNumber')}
+        disabled={false}
         text={keyDraft}
+        overridden={state.apiKey !== undefined}
+        invalid={false}
         onEdit={(text) => { setKeyDraft(text); setFailed(false) }}
+        onReset={() => { setKeyDraft(''); setFailed(false) }}
       />
       <ValueField
         id="tavily-section-base-url"
@@ -89,7 +96,7 @@ export function TavilyCard(props: TavilyCardProps) {
         overriddenLabel={t('overridden')}
         resetLabel={t('reset')}
         invalidLabel={t('invalidNumber')}
-        disabled={!state.writable}
+        disabled={false}
         text={baseURLDraft}
         overridden={state.baseURL !== undefined}
         invalid={false}
@@ -103,8 +110,8 @@ export function TavilyCard(props: TavilyCardProps) {
         overriddenLabel={t('overridden')}
         resetLabel={t('reset')}
         invalidLabel={t('invalidNumber')}
+        disabled={false}
         numeric
-        disabled={!state.writable}
         text={maxResultsDraft}
         overridden={state.maxResults !== undefined}
         invalid={maxResultsInvalid}

@@ -21,8 +21,6 @@ export interface TavilyCardState {
   baseURL?: string
   /** Section value; undefined = not configured. */
   maxResults?: number
-  /** 写死 true：settings 域 status/writable 不 ready 的历史行为（0382761 验证形态） */
-  writable: boolean
 }
 
 /** One save's staged edits; blank strings clear the settings field. */
@@ -97,7 +95,6 @@ export class TavilyCardController {
       apiKey: value?.apiKey,
       baseURL: value?.baseURL,
       maxResults: value?.maxResults,
-      writable: true,
     }
   }
 

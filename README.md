@@ -45,10 +45,11 @@ git push origin main
 
 | 项 | 默认 | 说明 |
 |---|---|---|
-| `apiKey` | `$TAVILY_API_KEY` | Tavily key（tavily.com 注册；MCP 端点的 `tvly-dev-` key 对 REST API 同样有效）。环境变量方式：compose 的 environment 加 `TAVILY_API_KEY`；或组合 config 直接写 `apiKey` |
-| `apiKeyEnv` | `TAVILY_API_KEY` | 凭据引用名，key 经 credentials 服务解析（仅影响服务端；设置 UI 固定操作默认引用） |
+| `apiKey` | `$TAVILY_API_KEY` | Tavily key（tavily.com 注册；MCP 端点的 `tvly-dev-` key 对 REST API 同样有效）。组合 config 或设置 UI 直接写明文；空 → 自动走官方 keyless 免费模式 |
 | `baseURL` | `https://api.tavily.com` | API 根，自动拼 `/search` |
 | `maxResults` | 不设 | 默认结果数（请求级 `maxResults` 优先） |
+
+设置 UI（插件配置页 → 网页搜索卡片）读写与 provider 同一配置域：三个字段均明文可编辑，清空保存即恢复默认/未配置。
 
 组合 config 覆盖示例（profile 的 `cordis.patch.yml`，与 bundle 自带条目同 id）：
 

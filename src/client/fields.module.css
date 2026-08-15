@@ -46,15 +46,6 @@
   color: var(--dsw-alias-label-secondary);
 }
 
-.badgeMuted {
-  border-radius: 999px;
-  padding: 1px 8px;
-  font-size: 11px;
-  line-height: 17px;
-  white-space: nowrap;
-  color: var(--dsw-alias-label-tertiary);
-}
-
 .reset {
   border: none;
   background: none;

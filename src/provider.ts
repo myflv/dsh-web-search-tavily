@@ -1,5 +1,5 @@
 // Tavily provider：POST /search；content→snippet、answer→content、空白条目丢弃；
-// options 每搜索投影（settings 域），key 走 credentials 服务（照官方 deepseek）。
+// options 每搜索投影（settings 域三字段明文：apiKey/baseURL/maxResults）。
 
 import { WebError } from '@deepseek-ai/dsh-web'
 import type {
@@ -16,7 +16,6 @@ export const TAVILY_PROVIDER_ID = 'tavily'
 /** Default Tavily endpoint; `/search` is the operation. */
 export const TAVILY_DEFAULT_BASE_URL = 'https://api.tavily.com'
 
-/** Credential reference resolved when the settings section names none. */
 /** Attribution header sent on every request. Bump with the package version. */
 const USER_AGENT = 'dsh-web-search-tavily' // 版本随包发版，避免双源漂移
 
@@ -74,9 +73,7 @@ export class TavilySearchProvider implements WebSearchProvider {
   }
 
   async search(request: WebSearchRequest, signal?: AbortSignal): Promise<WebSearchResult> {
-    // One snapshot for the whole operation: a settings write landing inside
-    // the await must not send the key resolved from the old section to the
-    // endpoint named by the new one.
+    // One snapshot for the whole operation.
     const o = this.options()
     // key 可选：未配置时走官方 keyless 免费模式（X-Tavily-Access-Mode 头）
     const apiKey = o.apiKey

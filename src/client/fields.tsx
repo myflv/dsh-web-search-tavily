@@ -84,30 +84,3 @@ export function ValueField(props: FieldProps & {
     </div>
   )
 }
-
-/**
- * A plain-text credential control. The value lives in the settings section
- * (same domain the provider reads), so the control seeds from it and a blank
- * draft clears it.
- * @param props - the field's copy and its staged text.
- * @returns the labelled control.
- */
-export function SecretField(props: Pick<FieldProps, 'id' | 'label' | 'hint' | 'text' | 'disabled' | 'onEdit'>) {
-  return (
-    <div className={css.field}>
-      <div className={css.head}>
-        <label className={css.label} htmlFor={props.id}>{props.label}</label>
-      </div>
-      <input
-        id={props.id}
-        className={css.input}
-        type="text"
-        autoComplete="off"
-        value={props.text}
-        disabled={props.disabled}
-        onChange={(event) => { props.onEdit(event.target.value) }}
-      />
-      <p className={css.hint}>{props.hint}</p>
-    </div>
-  )
-}
