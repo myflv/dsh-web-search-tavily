@@ -2,7 +2,6 @@
 // 接口地址、默认结果条数）。组件与样式从官方包内联（esbuild noExternal + css-modules）。
 const React = require('react') as typeof import('react')
 const { useSyncExternalStore } = require('react') as typeof import('react')
-const { useEffect, useState } = require('react') as typeof import('react')
 const { PluginCard } = require('../vendor/plugin-card/PluginCard.js') as typeof import('../vendor/plugin-card/PluginCard.js')
 const { SecretField, ValueField } = require('./fields.js') as typeof import('./fields.js')
 import type { CardShell } from '@deepseek-ai/dsh-client-ui-settings-plugins/client'
@@ -29,20 +28,15 @@ export function TavilyCard(props: TavilyCardProps) {
   const [maxResultsDraft, setMaxResultsDraft] = React.useState(seedOf(state.maxResults))
   const [saving, setSaving] = React.useState(false)
   const [failed, setFailed] = React.useState(false)
-  // 保存落盘后 section 值变化 → 草稿同步为新值（用户编辑期间 state 不变，不覆盖草稿）
-  useEffect(() => { setBaseURLDraft(seedOf(state.baseURL)) }, [state.baseURL])
-  useEffect(() => { setMaxResultsDraft(seedOf(state.maxResults)) }, [state.maxResults])
-  const baseURLOverridden = state.baseURL !== undefined
-  const maxResultsOverridden = state.maxResults !== undefined
+  // 草稿优先：外部改 section 不覆盖正在输入的草稿，保存时以草稿为准
+  const seedBaseURL = seedOf(state.baseURL)
+  const seedMaxResults = seedOf(state.maxResults)
   const trimmedMax = maxResultsDraft.trim()
-  const maxResultsInvalid = trimmedMax !== '' && !Number.isFinite(Number(trimmedMax))
+  const maxResultsInvalid = trimmedMax !== '' && !(Number.isInteger(Number(trimmedMax)) && Number(trimmedMax) >= 1)
   const shell: CardShell = {
     available: true, // 写死：settings 域 status 不 ready 的历史行为（0382761 验证形态）
     writable: state.apiKeyWritable,
-    dirty: keyDraft.trim() !== ''
-      || baseURLDraft !== seedOf(state.baseURL)
-      || maxResultsDraft !== seedOf(state.maxResults)
-      || failed,
+    dirty: keyDraft.trim() !== '' || baseURLDraft !== seedBaseURL || maxResultsDraft !== seedMaxResults || failed,
     invalid: maxResultsInvalid,
     saving,
     failed,
@@ -60,16 +54,21 @@ export function TavilyCard(props: TavilyCardProps) {
           apiKey: keyDraft,
           baseURL: baseURLDraft,
           maxResults: maxResultsDraft,
-        }).then((configured) => {
+        }).then((ok) => {
           setSaving(false)
-          setFailed(!configured)
-          if (configured) setKeyDraft('') // 失败保留草稿（官方 failed 语义）
+          setFailed(!ok)
+          if (ok) {
+            // 三字段同一处重置（草稿=本次提交值）；失败保留草稿（官方 failed 语义）
+            setKeyDraft('')
+            setBaseURLDraft(baseURLDraft.trim())
+            setMaxResultsDraft(maxResultsDraft.trim())
+          }
         })
       }}
       onDiscard={() => {
         setKeyDraft('')
-        setBaseURLDraft(seedOf(state.baseURL))
-        setMaxResultsDraft(seedOf(state.maxResults))
+        setBaseURLDraft(seedBaseURL)
+        setMaxResultsDraft(seedMaxResults)
         setFailed(false)
       }}
     >
@@ -93,7 +92,7 @@ export function TavilyCard(props: TavilyCardProps) {
         invalidLabel={t('invalidNumber')}
         disabled={!state.apiKeyWritable}
         text={baseURLDraft}
-        overridden={baseURLOverridden}
+        overridden={state.baseURL !== undefined}
         invalid={false}
         onEdit={(text) => { setBaseURLDraft(text); setFailed(false) }}
         onReset={() => { setBaseURLDraft(''); setFailed(false) }}
@@ -108,7 +107,7 @@ export function TavilyCard(props: TavilyCardProps) {
         numeric
         disabled={!state.apiKeyWritable}
         text={maxResultsDraft}
-        overridden={maxResultsOverridden}
+        overridden={state.maxResults !== undefined}
         invalid={maxResultsInvalid}
         onEdit={(text) => { setMaxResultsDraft(text); setFailed(false) }}
         onReset={() => { setMaxResultsDraft(''); setFailed(false) }}

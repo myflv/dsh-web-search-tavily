@@ -58,10 +58,14 @@ export class TavilyCardController {
     private readonly api: Pick<IApiClient, 'credentials'>,
   ) {
     this.state = this.project()
-    // section 或凭据引用变化都重投影：baseURL/maxResults 可能被本卡或外部改
+    // section 或凭据引用变化都重投影（投影相同则不通知，省无谓重渲染）；
+    // baseURL/maxResults 可能被本卡或外部改
     scope.subscribe(() => {
-      this.state = this.project()
-      this.emit()
+      const next = this.project()
+      if (this.changed(next)) {
+        this.state = next
+        this.emit()
+      }
       if (refOf(this.scope.getSnapshot()) !== this.credential.ref) void this.readCredential()
     })
     void this.readCredential()
@@ -84,10 +88,24 @@ export class TavilyCardController {
     void this.readCredential()
   }
 
-  /** 一次写全部编辑：key 走凭据域，baseURL/maxResults 走设置域。 */
+  /** 一次写全部编辑：key 走凭据域，baseURL/maxResults 走设置域（两域独立，并行写）。 */
   save = async (edits: TavilyCardEdits): Promise<boolean> => {
     const key = edits.apiKey.trim()
-    if (key !== '') {
+    const baseURL = edits.baseURL.trim()
+    const maxResults = edits.maxResults.trim()
+    let ok = true
+    const settingsWrite = (async () => {
+      try {
+        // 同一 scope 的写顺序执行（revision fencing 不允许并行）；与凭据域并行
+        if (baseURL === '') await this.scope.unset('baseURL')
+        else await this.scope.set('baseURL', baseURL)
+        if (maxResults === '') await this.scope.unset('maxResults')
+        else await this.scope.set('maxResults', Number(maxResults))
+      } catch {
+        ok = false // 设置域写被拒（内存模式等）
+      }
+    })()
+    const keyWrite = key === '' ? Promise.resolve() : (async () => {
       try {
         await this.api.credentials.set({ ref: refOf(this.scope.getSnapshot()), value: key })
       } catch {
@@ -95,18 +113,10 @@ export class TavilyCardController {
         // authority on whether the key now exists.
       }
       await this.readCredential()
-    }
-    const baseURL = edits.baseURL.trim()
-    const maxResults = edits.maxResults.trim()
-    try {
-      if (baseURL === '') await this.scope.unset('baseURL')
-      else await this.scope.set('baseURL', baseURL)
-      if (maxResults === '') await this.scope.unset('maxResults')
-      else await this.scope.set('maxResults', Number(maxResults))
-    } catch {
-      return false // settings 写被拒（内存模式等）：整体视为未落盘
-    }
-    return this.credential.configured
+      if (!this.credential.configured) ok = false
+    })()
+    await Promise.all([settingsWrite, keyWrite])
+    return ok
   }
 
   private project(): TavilyCardState {
@@ -114,9 +124,18 @@ export class TavilyCardController {
     return {
       apiKeyConfigured: this.credential.configured,
       apiKeyWritable: this.credential.writable,
-      ...(value?.baseURL !== undefined ? { baseURL: value.baseURL } : {}),
-      ...(value?.maxResults !== undefined ? { maxResults: value.maxResults } : {}),
+      baseURL: value?.baseURL,
+      maxResults: value?.maxResults,
     }
+  }
+
+  /** 投影与当前 state 逐字段相同则不通知（subscribe 热路径守卫）。 */
+  private changed(next: TavilyCardState): boolean {
+    const prev = this.state
+    return next.apiKeyConfigured !== prev.apiKeyConfigured
+      || next.apiKeyWritable !== prev.apiKeyWritable
+      || next.baseURL !== prev.baseURL
+      || next.maxResults !== prev.maxResults
   }
 
   /**

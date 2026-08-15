@@ -19,7 +19,7 @@ export interface FieldProps {
   hint: string
   /** Draft text this control renders. */
   text: string
-  /** True when saving would leave a user-layer entry for this field. */
+  /** Whether this field currently carries an override (a staged set or a saved user-layer value). */
   overridden: boolean
   /** True when the draft is not a value this field accepts. */
   invalid: boolean
@@ -47,8 +47,6 @@ export interface FieldProps {
 export function ValueField(props: FieldProps & {
   /** Hints a numeric keypad without narrowing what the control accepts. */
   numeric?: boolean
-  /** Placeholder shown while the draft is empty. */
-  placeholder?: string
 }) {
   return (
     <div className={css.field}>
@@ -74,10 +72,9 @@ export function ValueField(props: FieldProps & {
         id={props.id}
         className={props.invalid ? css.inputInvalid : css.input}
         type="text"
-        {...props.numeric === true ? { inputMode: 'numeric' as const } : {}}
+        inputMode={props.numeric ? 'numeric' : undefined}
         {...props.invalid ? { 'aria-invalid': true } : {}}
         value={props.text}
-        placeholder={props.placeholder ?? ''}
         disabled={props.disabled}
         onChange={(event) => { props.onEdit(event.target.value) }}
       />
