@@ -34,14 +34,11 @@ export function apply(ctx: ClientContext): void {
     'web-search-tavily: credential invalidations',
   )
 
-  // Independent settings section (shell's own declaration, stable across
-  // plugin sets); the plugins-tab card slot styles would need the official
-  // card components, which the loader module table cannot resolve.
-  ctx.slots.inject('settings.section', () => ctx.slots.register({
-    name: 'settings.section',
+  // 插件配置页卡片（官方 PluginCard 的 <li> 形态，plugin.item slot 天然契合）
+  ctx.slots.inject('settings.plugin.item', () => ctx.slots.register({
+    name: 'settings.plugin.item',
     id: NS,
-    order: 100,
-    label: () => t('nav'),
+    order: 1,
     locale: NS,
     inject: () => ({ tavilyCard: controller }),
   }, TavilyCard))
