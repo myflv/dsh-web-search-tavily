@@ -23,9 +23,8 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24   # npm ≥11.5.1（OIDC 前提）；registry-url 不设——空 token 会挡 OIDC 认证
           cache: npm
-          registry-url: 'https://registry.npmjs.org'
       - run: npm ci
       # 固定 asset 名（不带版本），安装端 URL 永远 latest/download/dsh-web-search-tavily.tgz
       - run: npm run pack && mv *-*.tgz dsh-web-search-tavily.tgz
