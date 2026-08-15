@@ -88,7 +88,7 @@ export class TavilyCardController {
     void this.readCredential()
   }
 
-  /** 一次写全部编辑：key 走凭据域，baseURL/maxResults 走设置域（两域独立，并行写）。 */
+  /** 一次写全部编辑：key 走凭据域（空=真清除），baseURL/maxResults 走设置域（两域独立，并行写）。 */
   save = async (edits: TavilyCardEdits): Promise<boolean> => {
     const key = edits.apiKey.trim()
     const baseURL = edits.baseURL.trim()
@@ -105,15 +105,18 @@ export class TavilyCardController {
         ok = false // 设置域写被拒（内存模式等）
       }
     })()
-    const keyWrite = key === '' ? Promise.resolve() : (async () => {
+    // 凭据域的成败按分支判定：set 后应已配置，unset 后应已清除
+    const keyWrite = (async () => {
+      const ref = refOf(this.scope.getSnapshot())
       try {
-        await this.api.credentials.set({ ref: refOf(this.scope.getSnapshot()), value: key })
+        if (key === '') await this.api.credentials.unset({ ref })
+        else await this.api.credentials.set({ ref, value: key })
       } catch {
         // Refusals surface through the re-read below: the Host is the only
         // authority on whether the key now exists.
       }
       await this.readCredential()
-      if (!this.credential.configured) ok = false
+      if (key === '' ? this.credential.configured : !this.credential.configured) ok = false
     })()
     await Promise.all([settingsWrite, keyWrite])
     return ok

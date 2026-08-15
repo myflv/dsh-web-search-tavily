@@ -24,6 +24,7 @@ export function TavilyCard(props: TavilyCardProps) {
   const { tavilyCard, t } = props
   const state = useSyncExternalStore(tavilyCard.subscribe, tavilyCard.getState)
   const [keyDraft, setKeyDraft] = React.useState('')
+  const [keyEdited, setKeyEdited] = React.useState(false) // 空草稿≠未编辑：清空 key 保存 = 真清除
   const [baseURLDraft, setBaseURLDraft] = React.useState(seedOf(state.baseURL))
   const [maxResultsDraft, setMaxResultsDraft] = React.useState(seedOf(state.maxResults))
   const [saving, setSaving] = React.useState(false)
@@ -36,7 +37,7 @@ export function TavilyCard(props: TavilyCardProps) {
   const shell: CardShell = {
     available: true, // 写死：settings 域 status 不 ready 的历史行为（0382761 验证形态）
     writable: state.apiKeyWritable,
-    dirty: keyDraft.trim() !== '' || baseURLDraft !== seedBaseURL || maxResultsDraft !== seedMaxResults || failed,
+    dirty: keyEdited || baseURLDraft !== seedBaseURL || maxResultsDraft !== seedMaxResults || failed,
     invalid: maxResultsInvalid,
     saving,
     failed,
@@ -60,6 +61,7 @@ export function TavilyCard(props: TavilyCardProps) {
           if (ok) {
             // 三字段同一处重置（草稿=本次提交值）；失败保留草稿（官方 failed 语义）
             setKeyDraft('')
+            setKeyEdited(false)
             setBaseURLDraft(baseURLDraft.trim())
             setMaxResultsDraft(maxResultsDraft.trim())
           }
@@ -67,6 +69,7 @@ export function TavilyCard(props: TavilyCardProps) {
       }}
       onDiscard={() => {
         setKeyDraft('')
+        setKeyEdited(false)
         setBaseURLDraft(seedBaseURL)
         setMaxResultsDraft(seedMaxResults)
         setFailed(false)
@@ -81,7 +84,7 @@ export function TavilyCard(props: TavilyCardProps) {
         text={keyDraft}
         configured={state.apiKeyConfigured}
         stateLabel={state.apiKeyConfigured ? t('webSearchApiKeySet') : t('webSearchApiKeyUnset')}
-        onEdit={(text) => { setKeyDraft(text); setFailed(false) }}
+        onEdit={(text) => { setKeyDraft(text); setKeyEdited(true); setFailed(false) }}
       />
       <ValueField
         id="tavily-section-base-url"
