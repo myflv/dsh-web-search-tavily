@@ -25,6 +25,12 @@ export const zh = {
   delete: '删除',
   cancel: '取消',
   save: '保存',
+  saving: '保存中…',
+  saveFailed: '保存失败',
+  unsaved: '未保存',
+  readOnly: '只读',
+  collapse: '收起',
+  expand: '展开',
 }
 export const en: Record<keyof typeof zh, string> = {
   nav: 'Tavily Search',
@@ -39,4 +45,10 @@ export const en: Record<keyof typeof zh, string> = {
   delete: 'Delete',
   cancel: 'Cancel',
   save: 'Save',
+  saving: 'Saving…',
+  saveFailed: 'Save failed',
+  unsaved: 'Unsaved',
+  readOnly: 'Read only',
+  collapse: 'Collapse',
+  expand: 'Expand',
 }
