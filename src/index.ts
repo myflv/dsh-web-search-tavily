@@ -1,14 +1,12 @@
-// 插件主体：注册 Tavily provider 进 ctx.web；settings 域（web-search-tavily 命名空间）
-// 每搜索覆盖组合配置，key 经 credentials 服务解析（UI 写入的凭据域）。
+// 插件主体：注册 Tavily provider 进 ctx.web；settings 域（web-search-tavily
+// 命名空间）三字段（apiKey/baseURL/maxResults）全部明文经 UI 读写，
+// 每搜索覆盖组合配置。
 
 import type { Context } from '@deepseek-ai/cordis'
-import { launchEnvironmentOf } from '@deepseek-ai/dsh-launch-environment'
-import { credentialRef } from '@deepseek-ai/dsh-credentials'
 import { installSettingsSection, settingsNamespace } from '@deepseek-ai/dsh-settings'
 import z from '@deepseek-ai/schemastery'
 import type {} from '@deepseek-ai/dsh-web'
 import {
-  TAVILY_DEFAULT_API_KEY_REF,
   TAVILY_DEFAULT_BASE_URL,
   TAVILY_PROVIDER_ID,
   TavilySearchProvider,
@@ -16,7 +14,6 @@ import {
 } from './provider.js'
 
 export {
-  TAVILY_DEFAULT_API_KEY_REF,
   TAVILY_DEFAULT_BASE_URL,
   TAVILY_PROVIDER_ID,
   TavilySearchProvider,
@@ -34,10 +31,8 @@ export const WEB_SEARCH_TAVILY_SETTINGS_NAMESPACE = 'web-search-tavily'
 
 /** Plugin config — the settings section overlays these per search. */
 export interface Config {
-  /** Tavily API key; overrides the credential reference when present. */
+  /** Tavily API key; blank inherits the composition layer (env patch). */
   apiKey?: string
-  /** Credential reference resolving the key from the launch environment. */
-  apiKeyEnv?: string
   /** Endpoint base; `/search` is appended. Defaults to the public API. */
   baseURL?: string
   /** Default result count when a request carries no `maxResults`. Omitted = none. */
@@ -45,8 +40,8 @@ export interface Config {
 }
 
 export const Config: z<Config> = z.object({
-  apiKey: z.string().role('secret'), // seam 按 role('secret') 脱敏，key 不进 describe 响应
-  apiKeyEnv: z.string().role('credential-ref'),
+  // 明文存储（与 baseURL 同域）：UI 可显示、可编辑、可清空；空 → keyless
+  apiKey: z.string(),
   // schemastery object 字段默认可选：组合层不写 endpoint/条数时留空，继承 provider 默认
   baseURL: z.string(),
   maxResults: z.number().step(1).min(1),
@@ -63,28 +58,17 @@ export function apply(ctx: Context, config: Config): void {
     // section per search, so a committed change needs no re-registration.
     onChange: () => {},
   })
-  ctx.web.registerSearchProvider(new TavilySearchProvider(() => resolveOptions(ctx, current())))
+  ctx.web.registerSearchProvider(new TavilySearchProvider(() => resolveOptions(current())))
 }
 
 /**
- * Project the section/composition value into provider options: the apiKey
- * resolves from the credential reference (`apiKeyEnv` ?? default) via the
- * launch environment; a literal `apiKey` wins over it.
+ * Project the section/composition value into provider options: all three
+ * fields are plain settings values — the UI writes the same domain the
+ * provider reads, so what the card shows is exactly what search uses.
  */
-function resolveOptions(ctx: Context, config: Config): TavilySearchProviderOptions {
-  const apiKeyEnv = credentialRef(config.apiKeyEnv ?? TAVILY_DEFAULT_API_KEY_REF)
-  const literalApiKey = config.apiKey !== undefined && config.apiKey.length > 0
-    ? config.apiKey
-    : undefined
+function resolveOptions(config: Config): TavilySearchProviderOptions {
   return {
-    ...literalApiKey === undefined ? {} : { apiKey: literalApiKey },
-    resolveApiKey: async () => {
-      const credentials = ctx.get('credentials')
-      if (credentials !== undefined) return (await credentials.resolve(apiKeyEnv))?.value
-      // Without the seam the environment is the whole credential plane.
-      const ambient = launchEnvironmentOf(ctx).get(apiKeyEnv)
-      return ambient !== undefined && ambient.value.length > 0 ? ambient.value : undefined
-    },
+    apiKey: config.apiKey,
     baseURL: config.baseURL ?? TAVILY_DEFAULT_BASE_URL,
     ...config.maxResults !== undefined ? { maxResults: config.maxResults } : {},
   }

@@ -86,30 +86,22 @@ export function ValueField(props: FieldProps & {
 }
 
 /**
- * A write-only credential control. The value never rides a response, so the
- * control reports only whether one is configured and starts blank; a blank
- * draft writes nothing, which keeps the stored key rather than clearing it.
- * @param props - the field's copy, its staged text, and the configured state.
+ * A plain-text credential control. The value lives in the settings section
+ * (same domain the provider reads), so the control seeds from it and a blank
+ * draft clears it.
+ * @param props - the field's copy and its staged text.
  * @returns the labelled control.
  */
-export function SecretField(props: Pick<FieldProps, 'id' | 'label' | 'hint' | 'text' | 'disabled' | 'onEdit'> & {
-  /** Whether the Host reports a configured credential for this reference. */
-  configured: boolean
-  /** Copy describing the configured state. */
-  stateLabel: string
-}) {
+export function SecretField(props: Pick<FieldProps, 'id' | 'label' | 'hint' | 'text' | 'disabled' | 'onEdit'>) {
   return (
     <div className={css.field}>
       <div className={css.head}>
         <label className={css.label} htmlFor={props.id}>{props.label}</label>
-        <span className={css.badges}>
-          <span className={props.configured ? css.badge : css.badgeMuted}>{props.stateLabel}</span>
-        </span>
       </div>
       <input
         id={props.id}
         className={css.input}
-        type="password"
+        type="text"
         autoComplete="off"
         value={props.text}
         disabled={props.disabled}

@@ -1,5 +1,5 @@
-// Tavily provider 卡片：官方 PluginCard 壳 + 官方字段布局（API Key 凭据气泡、
-// 接口地址、默认结果条数）。组件与样式从官方包内联（esbuild noExternal + css-modules）。
+// Tavily provider 卡片：官方 PluginCard 壳 + 官方字段布局（API Key、接口地址、
+// 默认结果条数，全部明文经设置域读写）。组件与样式从官方包内联（esbuild noExternal + css-modules）。
 const React = require('react') as typeof import('react')
 const { useSyncExternalStore } = require('react') as typeof import('react')
 const { PluginCard } = require('../vendor/plugin-card/PluginCard.js') as typeof import('../vendor/plugin-card/PluginCard.js')
@@ -23,21 +23,22 @@ function seedOf(value: string | number | undefined): string {
 export function TavilyCard(props: TavilyCardProps) {
   const { tavilyCard, t } = props
   const state = useSyncExternalStore(tavilyCard.subscribe, tavilyCard.getState)
-  const [keyDraft, setKeyDraft] = React.useState('')
-  const [keyEdited, setKeyEdited] = React.useState(false) // 空草稿≠未编辑：清空 key 保存 = 真清除
+  // 三字段同一形态：草稿 seed 自 section 当前值（明文），保存后重置为提交值
+  const [keyDraft, setKeyDraft] = React.useState(seedOf(state.apiKey))
   const [baseURLDraft, setBaseURLDraft] = React.useState(seedOf(state.baseURL))
   const [maxResultsDraft, setMaxResultsDraft] = React.useState(seedOf(state.maxResults))
   const [saving, setSaving] = React.useState(false)
   const [failed, setFailed] = React.useState(false)
   // 草稿优先：外部改 section 不覆盖正在输入的草稿，保存时以草稿为准
+  const seedKey = seedOf(state.apiKey)
   const seedBaseURL = seedOf(state.baseURL)
   const seedMaxResults = seedOf(state.maxResults)
   const trimmedMax = maxResultsDraft.trim()
   const maxResultsInvalid = trimmedMax !== '' && !(Number.isInteger(Number(trimmedMax)) && Number(trimmedMax) >= 1)
   const shell: CardShell = {
     available: true, // 写死：settings 域 status 不 ready 的历史行为（0382761 验证形态）
-    writable: state.apiKeyWritable,
-    dirty: keyEdited || baseURLDraft !== seedBaseURL || maxResultsDraft !== seedMaxResults || failed,
+    writable: state.writable,
+    dirty: keyDraft !== seedKey || baseURLDraft !== seedBaseURL || maxResultsDraft !== seedMaxResults || failed,
     invalid: maxResultsInvalid,
     saving,
     failed,
@@ -60,16 +61,14 @@ export function TavilyCard(props: TavilyCardProps) {
           setFailed(!ok)
           if (ok) {
             // 三字段同一处重置（草稿=本次提交值）；失败保留草稿（官方 failed 语义）
-            setKeyDraft('')
-            setKeyEdited(false)
+            setKeyDraft(keyDraft.trim())
             setBaseURLDraft(baseURLDraft.trim())
             setMaxResultsDraft(maxResultsDraft.trim())
           }
         })
       }}
       onDiscard={() => {
-        setKeyDraft('')
-        setKeyEdited(false)
+        setKeyDraft(seedKey)
         setBaseURLDraft(seedBaseURL)
         setMaxResultsDraft(seedMaxResults)
         setFailed(false)
@@ -79,12 +78,9 @@ export function TavilyCard(props: TavilyCardProps) {
         id="tavily-section-api-key"
         label={t('webSearchApiKey')}
         hint={t('webSearchApiKeyHint')}
-        // 凭据域与设置域是独立存储：key 的可用性由凭据域说了算，禁用只看它
-        disabled={!state.apiKeyWritable}
+        disabled={!state.writable}
         text={keyDraft}
-        configured={state.apiKeyConfigured}
-        stateLabel={state.apiKeyConfigured ? t('webSearchApiKeySet') : t('webSearchApiKeyUnset')}
-        onEdit={(text) => { setKeyDraft(text); setKeyEdited(true); setFailed(false) }}
+        onEdit={(text) => { setKeyDraft(text); setFailed(false) }}
       />
       <ValueField
         id="tavily-section-base-url"
@@ -93,7 +89,7 @@ export function TavilyCard(props: TavilyCardProps) {
         overriddenLabel={t('overridden')}
         resetLabel={t('reset')}
         invalidLabel={t('invalidNumber')}
-        disabled={!state.apiKeyWritable}
+        disabled={!state.writable}
         text={baseURLDraft}
         overridden={state.baseURL !== undefined}
         invalid={false}
@@ -108,7 +104,7 @@ export function TavilyCard(props: TavilyCardProps) {
         resetLabel={t('reset')}
         invalidLabel={t('invalidNumber')}
         numeric
-        disabled={!state.apiKeyWritable}
+        disabled={!state.writable}
         text={maxResultsDraft}
         overridden={state.maxResults !== undefined}
         invalid={maxResultsInvalid}

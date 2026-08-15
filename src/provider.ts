@@ -17,17 +17,13 @@ export const TAVILY_PROVIDER_ID = 'tavily'
 export const TAVILY_DEFAULT_BASE_URL = 'https://api.tavily.com'
 
 /** Credential reference resolved when the settings section names none. */
-export const TAVILY_DEFAULT_API_KEY_REF = 'TAVILY_API_KEY'
-
 /** Attribution header sent on every request. Bump with the package version. */
 const USER_AGENT = 'dsh-web-search-tavily' // 版本随包发版，避免双源漂移
 
 /** Resolved provider options (the plugin's `apply` projects them per search). */
 export interface TavilySearchProviderOptions {
-  /** Literal Tavily API key (composition config); wins over resolution. */
+  /** Tavily API key (settings section value); absent → keyless mode. */
   apiKey?: string
-  /** Async key resolution through the credentials seam or the environment. */
-  resolveApiKey: () => Promise<string | undefined>
   /** Endpoint base; `/search` is appended. */
   baseURL: string
   /** Default result count when a request carries no `maxResults`. */
@@ -72,19 +68,18 @@ export class TavilySearchProvider implements WebSearchProvider {
   constructor(private readonly options: () => TavilySearchProviderOptions) {}
 
   available(): boolean {
-    // resolveApiKey 是必选能力（apply 恒提供），key 解析能力恒在
     const o = this.options()
     return URL.canParse(o.baseURL)
       && (o.maxResults === undefined || (Number.isInteger(o.maxResults) && o.maxResults > 0))
   }
 
   async search(request: WebSearchRequest, signal?: AbortSignal): Promise<WebSearchResult> {
-    // One snapshot for the whole operation: credential resolution awaits, and a
-    // settings write landing inside that await must not send the key resolved
-    // from the old section to the endpoint named by the new one.
+    // One snapshot for the whole operation: a settings write landing inside
+    // the await must not send the key resolved from the old section to the
+    // endpoint named by the new one.
     const o = this.options()
     // key 可选：未配置时走官方 keyless 免费模式（X-Tavily-Access-Mode 头）
-    const apiKey = o.apiKey ?? await o.resolveApiKey()
+    const apiKey = o.apiKey
     const hasKey = apiKey !== undefined && apiKey.length > 0
     // A per-request bound wins over the configured default; either may be absent.
     const maxResults = request.maxResults ?? o.maxResults
