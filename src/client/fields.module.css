@@ -50,7 +50,16 @@
   color: var(--dsw-alias-label-tertiary);
 }
 
-
+.reset {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--dsw-alias-label-secondary);
+  cursor: pointer;
+}
 
 .reset:hover:not(:disabled) {
   color: var(--dsw-alias-label-primary);
@@ -82,13 +91,39 @@
   cursor: default;
 }
 
+/* 官方用 css-modules composes 复用 .input；我们的构建插件不支持，直接展开 */
+.inputInvalid {
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--dsw-alias-label-error);
+  border-radius: 8px;
+  background: var(--dsw-alias-bg-layer-3);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--dsw-alias-label-primary);
+}
 
+.inputInvalid:focus-visible {
+  outline: none;
+  border-color: var(--dsw-alias-brand-primary);
+}
 
-
+.inputInvalid:disabled {
+  color: var(--dsw-alias-label-tertiary);
+  cursor: default;
+}
 
 .hint {
   margin: 0;
   font-size: 12px;
   line-height: 1.5;
   color: var(--dsw-alias-label-tertiary);
+}
+
+.invalid {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--dsw-alias-label-error);
 }

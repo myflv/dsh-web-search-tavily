@@ -47,6 +47,7 @@ export interface Config {
 export const Config: z<Config> = z.object({
   apiKey: z.string().role('secret'), // seam 按 role('secret') 脱敏，key 不进 describe 响应
   apiKeyEnv: z.string().role('credential-ref'),
+  // schemastery object 字段默认可选：组合层不写 endpoint/条数时留空，继承 provider 默认
   baseURL: z.string(),
   maxResults: z.number().step(1).min(1),
 })

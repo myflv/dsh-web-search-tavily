@@ -1,4 +1,6 @@
-// Tavily 设置控制器：key 经凭据域读写（默认引用 TAVILY_API_KEY），对齐官方 DeepSeek 卡片。
+// Tavily 设置控制器：key 经凭据域读写（默认引用 TAVILY_API_KEY），
+// baseURL/maxResults 经设置域读写。可用性写死 true（settings 域 status
+// 不 ready 的历史行为，0382761 验证形态），编辑经组件本地草稿，save 一次提交。
 
 import type { IApiClient } from '@deepseek-ai/dsh-api-remotes/client'
 import type { SettingsScope } from '@deepseek-ai/dsh-client-runtime/client'
@@ -19,6 +21,20 @@ export interface TavilyCardState {
   apiKeyConfigured: boolean
   /** Whether the credentials domain accepts a write; false disables the control. */
   apiKeyWritable: boolean
+  /** Section value; undefined = not configured (inherits composition layer). */
+  baseURL?: string
+  /** Section value; undefined = not configured. */
+  maxResults?: number
+}
+
+/** One save's staged edits; blank strings clear the settings field. */
+export interface TavilyCardEdits {
+  /** Blank writes nothing, keeping the stored key. */
+  apiKey: string
+  /** Blank unsets the field (re-inherits the composition default). */
+  baseURL: string
+  /** Blank unsets the field; non-numeric blocks the save before it starts. */
+  maxResults: string
 }
 
 /** The registration-side face the card's slot entry injects. */
@@ -27,7 +43,7 @@ export interface TavilyCardFace {
   tavilyCard: {
     subscribe(listener: () => void): () => void
     getState(): TavilyCardState
-    save(apiKey: string): Promise<boolean>
+    save(edits: TavilyCardEdits): Promise<boolean>
   }
 }
 
@@ -42,8 +58,10 @@ export class TavilyCardController {
     private readonly api: Pick<IApiClient, 'credentials'>,
   ) {
     this.state = this.project()
-    // settings 变更不可能改凭据（只经本卡 set/unset），仅在 apiKeyEnv 引用变化时重读
+    // section 或凭据引用变化都重投影：baseURL/maxResults 可能被本卡或外部改
     scope.subscribe(() => {
+      this.state = this.project()
+      this.emit()
       if (refOf(this.scope.getSnapshot()) !== this.credential.ref) void this.readCredential()
     })
     void this.readCredential()
@@ -66,25 +84,38 @@ export class TavilyCardController {
     void this.readCredential()
   }
 
-  /** 写 key 到凭据域（空值忽略），返回 Host 是否确认配置（saveFailed 推导依据）。 */
-  save = async (apiKey: string): Promise<boolean> => {
-    const value = apiKey.trim()
-    if (value === '') return this.credential.configured
-    try {
-      await this.api.credentials.set({ ref: refOf(this.scope.getSnapshot()), value })
-    } catch {
-      // Refusals surface through the re-read below: the Host is the only
-      // authority on whether the key now exists.
+  /** 一次写全部编辑：key 走凭据域，baseURL/maxResults 走设置域。 */
+  save = async (edits: TavilyCardEdits): Promise<boolean> => {
+    const key = edits.apiKey.trim()
+    if (key !== '') {
+      try {
+        await this.api.credentials.set({ ref: refOf(this.scope.getSnapshot()), value: key })
+      } catch {
+        // Refusals surface through the re-read below: the Host is the only
+        // authority on whether the key now exists.
+      }
+      await this.readCredential()
     }
-    await this.readCredential()
+    const baseURL = edits.baseURL.trim()
+    const maxResults = edits.maxResults.trim()
+    try {
+      if (baseURL === '') await this.scope.unset('baseURL')
+      else await this.scope.set('baseURL', baseURL)
+      if (maxResults === '') await this.scope.unset('maxResults')
+      else await this.scope.set('maxResults', Number(maxResults))
+    } catch {
+      return false // settings 写被拒（内存模式等）：整体视为未落盘
+    }
     return this.credential.configured
   }
 
-
   private project(): TavilyCardState {
+    const value = this.scope.getSnapshot().value
     return {
       apiKeyConfigured: this.credential.configured,
       apiKeyWritable: this.credential.writable,
+      ...(value?.baseURL !== undefined ? { baseURL: value.baseURL } : {}),
+      ...(value?.maxResults !== undefined ? { maxResults: value.maxResults } : {}),
     }
   }
 
