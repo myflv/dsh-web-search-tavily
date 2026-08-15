@@ -20,22 +20,27 @@ const cssModulesPlugin = {
   setup(build) {
     build.onLoad({ filter: /\.module\.css$/ }, async (args) => {
       const source = await readFile(args.path, 'utf8')
-      const classes = [...source.matchAll(/\.([A-Za-z0-9_-]+)\s*\{/g)].map(m => m[1])
+      // 收集全部类名 token（含 .field + .field / .input:focus 等组合与伪类形态）
+      const classes = [...new Set([...source.matchAll(/\.([A-Za-z0-9_-]+)(?=[\s,.:{])/g)].map(m => m[1]))]
       const map = {}
       let css = source
       for (const cls of classes) {
         const hash = [...cls].reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 0).toString(36).slice(0, 6)
         const scoped = `tvly-${hash}`
         map[cls] = scoped
-        css = css.replace(new RegExp(`\\.${cls}(?=[\\s,{])`, 'g'), `.${scoped}`)
+        css = css.replace(new RegExp(`\\.${cls}(?=[\\s,.:{])`, 'g'), `.${scoped}`)
       }
+      // 多个 module.css 追加进同一个 style（首模块建标签，后续追加内容）
       return {
         contents: `const __css = ${JSON.stringify(css)};
-if (typeof document !== 'undefined' && !document.querySelector('style[data-plugin="tavily-css"]')) {
-  const el = document.createElement('style');
-  el.setAttribute('data-plugin', 'tavily-css');
-  el.textContent = __css;
-  document.head.append(el);
+if (typeof document !== 'undefined') {
+  const el = document.querySelector('style[data-plugin="tavily-css"]') ?? (() => {
+    const e = document.createElement('style');
+    e.setAttribute('data-plugin', 'tavily-css');
+    document.head.append(e);
+    return e;
+  })();
+  if (!el.textContent.includes(__css.slice(0, 40))) el.textContent += __css;
 }
 module.exports = ${JSON.stringify(map)};`,
         loader: 'js',

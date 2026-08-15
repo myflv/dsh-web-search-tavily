@@ -24,7 +24,7 @@ export const zh = {
   delete: '删除',
   cancel: '取消',
   save: '保存',
-  discard: '放弃',
+  discard: '放弃修改',
   saving: '保存中…',
   saveFailed: '保存失败',
   unsaved: '未保存',
