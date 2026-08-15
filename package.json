@@ -1,7 +1,7 @@
 {
   "name": "@myflv/dsh-web-search-tavily",
   "description": "Tavily-backed search provider for the DeepSeek Harness web capability seam (ctx.web)",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "type": "module",
   "main": "lib/index.js",
   "types": "lib/types/index.d.ts",
