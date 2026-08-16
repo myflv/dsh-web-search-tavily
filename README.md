@@ -30,3 +30,8 @@ bash <(curl -sL https://raw.githubusercontent.com/myflv/dsh-web-search-tavily/ma
 
 - `dsh --dump-config --profile web | grep -A4 tavily` —— 应看到 `web.searchProvider: tavily`
 - 新会话"搜索一下 xxx"——web_search 走 Tavily，结果带 web_card
+
+
+## 友情链接
+
+- [LINUX DO](https://linux.do) — 新的理想型社区
