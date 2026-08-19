@@ -24,11 +24,12 @@ export function apply(ctx: ClientContext): void {
   const controller = new TavilyCardController(ctx.settingsScope.bind({ namespace: NS }))
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'web-search-tavily: section locale')
 
-  // 插件配置页卡片（官方 PluginCard 的 <li> 形态，plugin.item slot 天然契合）
+  // 插件配置页卡片（官方 PluginCard 的 <li> 形态）。rc.7 起 plugin.item 槽位
+  // 改为 keyed：按设置命名空间分派（key=NS），tab 与 Host 提供的命名空间求交集，
+  // 旧 list 形态（id/order）注册会因缺 key 直接抛错、卡片不渲染。
   ctx.slots.inject('settings.plugin.item', () => ctx.slots.register({
     name: 'settings.plugin.item',
-    id: NS,
-    order: 1,
+    key: NS,
     locale: NS,
     inject: () => ({ tavilyCard: controller }),
   }, TavilyCard))
